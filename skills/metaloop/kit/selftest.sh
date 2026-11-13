@@ -77,7 +77,7 @@ p = {
   {"name": "unit", "run": "st-run test unit", "tests": "jest", "slots": 3},
   {"name": "integration", "run": "st-run test integration", "tests": "jest", "services": ["web"],
    "skippable": "CI's integration job runs it"}]},
- "services": {"web": {"port": $SVC_PORT, "start": "exec '$PY' -m http.server {port} --bind 127.0.0.1 --directory {dir}",
+ "services": {"web": {"port": $SVC_PORT, "start": "exec '$PY' -u -m http.server {port} --bind 127.0.0.1 --directory {dir}",
                       "up": "curl -s -o /dev/null http://127.0.0.1:{port}/", "init": "echo pong > {dir}/ping.txt",
                       "ready": "curl -sf http://127.0.0.1:{port}/ping.txt >/dev/null", "timeout": 20,
                       "env": {"SVC_URL": "http://127.0.0.1:{port}"}}},

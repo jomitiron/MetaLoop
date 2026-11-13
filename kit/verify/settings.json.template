@@ -1,0 +1,61 @@
+{
+  "enabledPlugins": {
+    "aws-core@claude-plugins-official": false
+  },
+  "permissions": {
+    "allow": [
+      "mcp__chrome-devtools",
+      "Read",
+      "Glob",
+      "Grep",
+      "Edit(./**)",
+      "Write(./**)",
+      "Bash({{PYTHON}} ledger.py *)",
+      "Bash(curl *localhost*)",
+      "Bash(curl *127.0.0.1*)",
+      "Bash(grep *)",
+      "Bash(tail *)",
+      "Bash(head *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(wc *)",
+      "Bash(date *)"
+    ],
+    "deny": [
+      "Agent",
+      "Task",
+      "Workflow",
+      "AskUserQuestion",
+      "Artifact",
+      "WebFetch",
+      "WebSearch",
+      "CronCreate",
+      "ScheduleWakeup",
+      "RemoteTrigger",
+      "EnterWorktree",
+      "Bash(git *)",
+      "Bash(gh *)",
+      "Bash(taskkill *)",
+      "Bash(pkill *)",
+      "Bash(killall *)",
+      "Bash(brew *)",
+      "Bash(sudo *)",
+      "Bash(pip install*)",
+      "Bash(pip3 install*)",
+      "Bash({{PYTHON}} -m pip *)",
+      "Bash(npm *)",
+      "Bash(rm -rf *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "{{PYTHON}} {{RUN}}/ctx_guard.py", "timeout": 30 } ] }
+    ],
+    "PostToolUseFailure": [
+      { "matcher": "*", "hooks": [ { "type": "command", "command": "{{PYTHON}} {{RUN}}/ctx_guard.py", "timeout": 30 } ] }
+    ],
+    "Stop": [
+      { "hooks": [ { "type": "command", "command": "{{PYTHON}} {{RUN}}/end_gate.py", "timeout": 30 } ] }
+    ]
+  }
+}

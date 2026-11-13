@@ -1,0 +1,25 @@
+{
+ "about": "MySQL 8.4. Exports DATABASE_URL.",
+ "docker": {
+  "port": 53306,
+  "start": "docker run --rm --name metaloop-{id} -e MYSQL_ROOT_PASSWORD=metaloop -e MYSQL_DATABASE=app -p 127.0.0.1:{port}:3306 mysql:8.4",
+  "ready": "docker exec metaloop-{id} mysql -h 127.0.0.1 -uroot -pmetaloop -e 'SELECT 1' app >/dev/null 2>&1",
+  "stop": "docker rm -f metaloop-{id} >/dev/null",
+  "timeout": 150,
+  "env": {"DATABASE_URL": "mysql://root:metaloop@127.0.0.1:{port}/app"},
+  "requires": [{"tool": "docker", "check": "docker info >/dev/null 2>&1", "for": "MySQL in a container",
+                "install": "install and start Docker Desktop (or another Docker engine)", "who": "owner"}]
+ },
+ "native": {
+  "port": 53306,
+  "start": "mkdir -p {dir}/data && { [ -d {dir}/data/mysql ] || mysqld --initialize-insecure --datadir={dir}/data >/dev/null 2>&1; } && exec mysqld --datadir={dir}/data --port={port} --bind-address=127.0.0.1 --socket=/tmp/metaloop-{id}.sock --mysqlx=OFF",
+  "ready": "mysqladmin -h 127.0.0.1 -P {port} -uroot ping >/dev/null 2>&1",
+  "init": "mysql -h 127.0.0.1 -P {port} -uroot -e 'CREATE DATABASE IF NOT EXISTS app'",
+  "timeout": 120,
+  "env": {"DATABASE_URL": "mysql://root@127.0.0.1:{port}/app"},
+  "requires": [{"tool": "mysqld", "check": "command -v mysqld && command -v mysqladmin && command -v mysql", "for": "MySQL",
+                "install": "brew install mysql@8.4 (macOS) · apt install mysql-server (Linux)", "who": "claude"}]
+ },
+ "verify": {"port": 53406, "persist": "~/.metaloop/{project}/mysql", "reuse": true,
+            "seed": "FILL IN: the command that loads the test data the app needs (migrations, a seed script), or delete this line"}
+}

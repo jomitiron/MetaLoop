@@ -1,0 +1,42 @@
+{
+ "about": "Rust with Cargo.",
+ "requires": [
+  {
+   "tool": "cargo",
+   "for": "builds and tests",
+   "install": "rustup (rustup.rs)",
+   "who": "owner"
+  }
+ ],
+ "gate": {
+  "steps": [
+   {
+    "name": "build",
+    "run": "cargo build --all-targets"
+   },
+   {
+    "name": "clippy",
+    "run": "cargo clippy --all-targets -- -D warnings"
+   },
+   {
+    "name": "test",
+    "run": "cargo test",
+    "tests": "cargo",
+    "slots": 3,
+    "db": true
+   }
+  ]
+ },
+ "verify": {
+  "url": "http://localhost:8080",
+  "health": "/",
+  "build": "cargo build",
+  "start": "FILL IN: the command that serves the app on {app_port}, e.g. PORT={app_port} cargo run --bin server"
+ },
+ "chain_allow": [
+  "cargo build*",
+  "cargo test*",
+  "cargo clippy*",
+  "cargo check*"
+ ]
+}

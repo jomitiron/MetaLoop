@@ -1,0 +1,24 @@
+{
+ "about": "Anything else: every command left for you to fill in.",
+ "requires": [],
+ "gate": {
+  "steps": [
+   {
+    "name": "build",
+    "run": "FILL IN: the build command, or delete this step"
+   },
+   {
+    "name": "test",
+    "run": "FILL IN: the test command",
+    "slots": 3,
+    "db": true
+   }
+  ]
+ },
+ "verify": {
+  "url": "FILL IN: where the app answers, e.g. http://localhost:3000",
+  "health": "/",
+  "start": "FILL IN: the command that serves the app on {app_port}"
+ },
+ "chain_allow": []
+}

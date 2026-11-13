@@ -1,0 +1,37 @@
+{
+ "about": "PHP with Composer and PHPUnit (the built-in server for the verify loop).",
+ "requires": [
+  {
+   "tool": "php",
+   "for": "builds and tests",
+   "install": "brew install php composer (macOS)",
+   "who": "owner",
+   "check": "command -v php && command -v composer"
+  }
+ ],
+ "gate": {
+  "steps": [
+   {
+    "name": "install",
+    "run": "composer install --no-interaction --quiet"
+   },
+   {
+    "name": "test",
+    "run": "vendor/bin/phpunit",
+    "tests": "phpunit",
+    "slots": 3,
+    "db": true
+   }
+  ]
+ },
+ "verify": {
+  "url": "http://localhost:8000",
+  "health": "/",
+  "build": "composer install --no-interaction --quiet",
+  "start": "php -S 127.0.0.1:{app_port} -t public"
+ },
+ "chain_allow": [
+  "composer install*",
+  "vendor/bin/phpunit *"
+ ]
+}

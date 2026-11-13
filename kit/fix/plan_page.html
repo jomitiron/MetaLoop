@@ -1,0 +1,345 @@
+<title>__TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* The metaloop plan page: grilling rounds answered on the page, the plan they become (branches, each broken into tasks),
+   and its sign-off. Rendered by plan_page.py from plan.json. Soft theme: indigo primary, semantic trios. */
+:root{
+  --bg:#fafbfc; --card:#ffffff; --panel:#f5f6f8; --ink:#0f1729; --ink-2:#475467; --muted:#667085; --soft:#98a2b3;
+  --line:#e4e7ec; --line-strong:#c4cad3; --divider:#eef0f3; --primary:#2563eb; --primary-hover:#1d4ed8; --on-primary:#ffffff;
+  --tint:#eff4ff; --tint-100:#dbeafe; --ring:#eff4ff;
+  --ok-fg:#067647; --ok-bg:#ecfdf3; --ok-bd:#d1fae5; --warn-fg:#b54708; --warn-bg:#fffaeb; --warn-bd:#fef3c7;
+  --draft-fg:#667085; --draft-bg:#f5f6f8;
+  --ui:"Inter",system-ui,"Segoe UI",Roboto,sans-serif; --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0f131b; --card:#161b26; --panel:#1b2130; --ink:#e8ecf3; --ink-2:#b4bccb; --muted:#8f99ab; --soft:#6b7486;
+  --line:#2a3242; --line-strong:#3a4458; --divider:#222938; --primary:#7aa2ff; --primary-hover:#9bb8ff; --on-primary:#0f131b;
+  --tint:#1a2440; --tint-100:#263764; --ring:#1f2d52;
+  --ok-fg:#5fd49a; --ok-bg:#12291f; --ok-bd:#1d3d2e; --warn-fg:#f3b364; --warn-bg:#2a2114; --warn-bd:#43331a;
+  --draft-fg:#a3acbd; --draft-bg:#1b2130;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f131b; --card:#161b26; --panel:#1b2130; --ink:#e8ecf3; --ink-2:#b4bccb; --muted:#8f99ab; --soft:#6b7486;
+  --line:#2a3242; --line-strong:#3a4458; --divider:#222938; --primary:#7aa2ff; --primary-hover:#9bb8ff; --on-primary:#0f131b;
+  --tint:#1a2440; --tint-100:#263764; --ring:#1f2d52;
+  --ok-fg:#5fd49a; --ok-bg:#12291f; --ok-bd:#1d3d2e; --warn-fg:#f3b364; --warn-bg:#2a2114; --warn-bd:#43331a;
+  --draft-fg:#a3acbd; --draft-bg:#1b2130;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0; background:var(--bg); color:var(--ink); font:14px/1.55 var(--ui); font-variant-numeric:tabular-nums}
+.wrap{max-width:1040px; margin:0 auto; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:28px 72px; display:grid; gap:24px}
+h1,h2,h3{margin:0; text-wrap:balance; font-weight:700}
+h1{font-size:24px} h2{font-size:18px} h3{font-size:14.5px; font-weight:600}
+p{margin:0} a{color:var(--primary)} a:hover{color:var(--primary-hover)}
+button{font:inherit}
+:focus-visible{outline:none; box-shadow:0 0 0 4px var(--ring)}
+.ink2{color:var(--ink-2)} .muted{color:var(--muted)} .mono{font-family:var(--mono); font-size:12px}
+.btn{display:inline-flex; align-items:center; gap:7px; border:1px solid var(--primary); background:var(--primary); color:var(--on-primary); border-radius:8px; padding:7px 14px; font-size:13.5px; font-weight:600; cursor:pointer}
+.btn:hover{background:var(--primary-hover); border-color:var(--primary-hover)}
+.btn:disabled{background:var(--panel); color:var(--soft); border-color:var(--line); cursor:not-allowed}
+.btn.sec{background:var(--card); color:var(--ink); border-color:var(--line-strong)}
+.btn.sm{padding:5px 11px; font-size:12.5px; border-radius:6px}
+textarea{width:100%; font:13.5px/1.5 var(--ui); color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 12px; resize:vertical}
+textarea:focus{outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--ring)}
+section{display:grid; gap:12px; min-width:0}
+.head{display:grid; gap:6px}
+.chip{display:inline-block; font-size:11.5px; font-weight:600; border-radius:4px; padding:1px 6px; background:var(--draft-bg); color:var(--draft-fg)}
+.chip.ok{background:var(--ok-bg); color:var(--ok-fg)} .chip.wait{background:var(--warn-bg); color:var(--warn-fg)}
+.dec{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; display:grid; gap:10px}
+.dec.answered{border-color:var(--ok-bd)}
+.dh{display:flex; flex-wrap:wrap; gap:8px; align-items:baseline}
+.dh .id{font-family:var(--mono); font-size:12.5px; color:var(--muted)}
+.dec .q{color:var(--ink); font-weight:500; white-space:pre-wrap}
+.opts{display:grid; gap:6px}
+.opt{display:flex; gap:10px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 12px; cursor:pointer}
+.opt input{margin-top:3px; accent-color:var(--primary)}
+.rec{font-size:11px; font-weight:600; color:var(--ok-fg); background:var(--ok-bg); border-radius:4px; padding:0 6px; margin-left:6px; white-space:nowrap}
+.saved{font-size:12px; color:var(--muted)}
+.state{font-size:12.5px; color:var(--muted)} .state.ok{color:var(--ok-fg)} .state.err{color:var(--warn-fg)}
+.row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+details.done{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 16px}
+details.done summary{cursor:pointer; font-weight:600}
+details.done ol{margin:8px 0 0; padding-left:20px; display:grid; gap:6px; color:var(--ink-2)}
+.branches{display:grid; gap:10px}
+.branch{background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; display:grid; gap:8px; min-width:0}
+.branch .sub{display:flex; flex-wrap:wrap; gap:6px 12px; font-size:12.5px; color:var(--ink-2)}
+.tasks{list-style:none; margin:0; padding:0; display:grid; gap:4px}
+.tasks li{font-size:13px; color:var(--ink-2); overflow-wrap:anywhere}
+.tasks .test{font-family:var(--mono); font-size:11.5px; color:var(--muted)}
+.notasks{font-size:12.5px; color:var(--warn-fg); font-weight:600}
+.files{margin:6px 0 0; font-family:var(--mono); font-size:11.5px; color:var(--muted); overflow-wrap:anywhere}
+.tw{overflow-x:auto; background:var(--card); border:1px solid var(--line); border-radius:12px}
+table{border-collapse:collapse; width:100%; font-size:13px; min-width:760px}
+th{text-align:left; font-size:11.5px; color:var(--muted); background:var(--panel); padding:8px 10px; border-bottom:1px solid var(--line)}
+td{padding:8px 10px; border-bottom:1px solid var(--divider); vertical-align:top; color:var(--ink-2)}
+tr:last-child td{border-bottom:0}
+.signoff{border:1px solid var(--line); border-radius:12px; background:var(--card); padding:16px; display:flex; flex-wrap:wrap; gap:12px; align-items:center}
+.signoff p{font-size:13px; color:var(--ink-2); flex:1 1 320px}
+.reply{border:1px solid var(--tint-100); background:var(--tint); border-radius:10px; padding:9px 12px; display:grid; gap:3px}
+.reply .who{font-size:12px; font-weight:600; color:var(--primary)}
+.reply .txt{display:grid; gap:6px; font-size:13.5px}
+.ask{display:grid; gap:6px}
+.askbtn{justify-self:start; border:0; background:none; color:var(--primary); font-size:12.5px; font-weight:600; padding:0; cursor:pointer}
+.askbox{display:grid; gap:6px}
+.askstate{font-size:12.5px; color:var(--muted)}
+.qa-item{display:grid; gap:6px; border-top:1px solid var(--divider); padding-top:10px}
+.qa-item .where{font-size:11.5px; color:var(--muted); font-weight:600}
+.qa-item .q{font-size:13.5px}
+.hint{font-size:12px; color:var(--muted)}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <h1 id="title"></h1>
+    <p class="ink2" id="summary"></p>
+    <p class="hint">Answer the open round here; Claude draws up the next round from your answers. When no questions are left,
+      the plan below is drawn up for your sign-off. No work starts before you sign it off. @claude in a plain comment
+      doesn&rsquo;t reach Claude: use Ask Claude or Send.</p>
+    <span class="state" id="save-state">Answers save as you click.</span>
+  </header>
+  <section id="round-sec" hidden>
+    <h2 id="round-title"></h2>
+    <div id="round"></div>
+    <div class="row"><button type="button" class="btn" id="round-send" disabled>Send This Round To Claude</button><span class="state" id="round-state" role="status"></span></div>
+  </section>
+  <section id="decided-sec" hidden></section>
+  <section id="plan-sec" hidden>
+    <h2>The Plan</h2>
+    <div id="waves"></div>
+  </section>
+  <section id="defects-sec" hidden>
+    <h2>Defects</h2>
+    <div class="tw"><table><thead><tr><th>Id</th><th>Test</th><th>Title</th><th>Type</th><th>Why</th><th>Fix</th><th>Size</th><th>Gate</th><th>Branch</th></tr></thead><tbody id="defects"></tbody></table></div>
+  </section>
+  <section id="guide-sec" hidden>
+    <h2>Guide Corrections</h2>
+    <ul id="guide" class="ink2"></ul>
+  </section>
+  <section>
+    <div class="signoff" id="signoff">
+      <p id="signoff-text"></p>
+      <button class="btn" type="button" id="signoff-btn" disabled>Sign Off The Plan</button>
+    </div>
+  </section>
+  <section id="qa-sec" hidden>
+    <h2>Other Questions Answered</h2>
+    <div id="qa"></div>
+  </section>
+</div>
+
+<script>/*__TWO_WAY__*/</script>
+<script>
+var PLAN = __PLAN__;
+(function () {
+  var P = PLAN, T = TwoWay, el = T.el, $ = function (id) { return document.getElementById(id); };
+  var decisions = P.decisions || [], branches = P.branches || [];
+  var answers = {}, replies = {}, signoff = null, db = null, sending = false;
+  function id(d) { return 'd' + d.n; }
+  function decided(d) { return !!d.decided; }
+  var openRound = decisions.filter(function (d) { return !decided(d); }).map(function (d) { return d.round || 1; }).sort(function (a, b) { return a - b; })[0];
+  var current = decisions.filter(function (d) { return !decided(d) && (d.round || 1) === openRound; });
+  $('title').textContent = P.page_title || P.title || 'Plan';
+
+  function setState(text, cls) { var s = $('save-state'); s.textContent = text; s.className = 'state' + (cls ? ' ' + cls : ''); }
+  function answeredNow(d) { var a = answers[id(d)]; return !!(a && (a.choice || (a.note && a.note.trim()))); }
+  function optText(d, key) { var o = (d.options || []).filter(function (o) { return o.key === key; })[0]; return o ? o.text : key; }
+
+  function summary() {
+    var made = decisions.filter(decided).length;
+    var bits = [branches.length + (branches.length === 1 ? ' branch' : ' branches'), made + ' of ' + decisions.length + ' decisions made'];
+    if (openRound) bits.push('round ' + openRound + ' open');
+    $('summary').textContent = bits.join(' · ') + '.';
+    if (P.results_url && /^https:/.test(P.results_url)) {
+      var a = el('a', null, 'Results page'); a.href = P.results_url; a.target = '_blank'; a.rel = 'noopener';
+      $('summary').appendChild(document.createTextNode(' ')); $('summary').appendChild(a);
+    }
+    if (P.design && P.design.path) {  // an EGM plan: the approved design every branch builds from
+      $('summary').appendChild(document.createTextNode(' Built from the EGM design '));
+      if (P.design.url && /^https:/.test(P.design.url)) {
+        var dl = el('a', null, P.design.path); dl.href = P.design.url; dl.target = '_blank'; dl.rel = 'noopener';
+        $('summary').appendChild(dl);
+      } else $('summary').appendChild(el('span', 'mono', P.design.path));
+      $('summary').appendChild(document.createTextNode(' (' + (P.design.status || 'Approved') + ').'));
+    }
+  }
+
+  function decisionCard(d) {
+    var card = el('div', 'dec'); card.setAttribute('data-decision', id(d));
+    var h = el('div', 'dh'); h.appendChild(el('span', 'id', 'Q' + d.n)); h.appendChild(el('h3', null, d.title)); card.appendChild(h);
+    card.appendChild(el('p', 'q', d.context || ''));
+    var opts = el('div', 'opts');
+    (d.options || []).forEach(function (o) {
+      var lab = el('label', 'opt'), r = el('input'); r.type = 'radio'; r.name = id(d); r.value = o.key;
+      var sp = el('span'); sp.appendChild(el('b', null, o.key.toUpperCase() + '. ' + o.text));
+      if (o.key === d.recommend) sp.appendChild(el('span', 'rec', 'Recommended'));
+      lab.appendChild(r); lab.appendChild(sp); opts.appendChild(lab);
+      r.addEventListener('change', function () { save(d, {choice: r.value}); });
+    });
+    card.appendChild(opts);
+    var ta = el('textarea'); ta.rows = 2; ta.maxLength = 2000; ta.placeholder = 'Note (optional)'; ta.id = id(d) + '-note';
+    ta.setAttribute('aria-label', 'Note on Q' + d.n); card.appendChild(ta);
+    var timer = null;
+    ta.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { save(d, {note: ta.value}); }, 800); });
+    card.appendChild(el('span', 'saved'));
+    var rep = el('div'); rep.className = 'replyslot'; card.appendChild(rep);
+    T.attachAsk(card, 'Q' + d.n + ' ' + d.title, card);
+    return card;
+  }
+
+  function save(d, part) {
+    if (!db) { setState('Not saved: open the published page to answer.', 'err'); return; }
+    var a = answers[id(d)] || {};
+    a = {choice: part.choice !== undefined ? part.choice : (a.choice || ''), note: part.note !== undefined ? part.note : (a.note || ''),
+         at: new Date().toISOString(), by: T.me()};
+    answers[id(d)] = a; setState('Saving…'); paintRound();
+    db.doc('answers/' + id(d)).set(a).then(function () { setState('All answers saved', 'ok'); },
+      function () { setState('Couldn’t save. Try again.', 'err'); });
+  }
+
+  function buildRound() {
+    if (!current.length) return;
+    $('round-sec').hidden = false;
+    $('round-title').textContent = 'Round ' + openRound + ': ' + current.length + (current.length === 1 ? ' Question' : ' Questions');
+    var box = $('round'); box.textContent = '';
+    current.forEach(function (d) { box.appendChild(decisionCard(d)); });
+  }
+  function paintRound() {
+    var n = 0;
+    current.forEach(function (d) {
+      var card = document.querySelector('[data-decision="' + id(d) + '"]'); if (!card) return;
+      var a = answers[id(d)] || {};
+      card.querySelectorAll('input[type=radio]').forEach(function (r) { r.checked = (r.value === a.choice); });
+      var ta = card.querySelector('textarea[id$="-note"]'); if (ta && document.activeElement !== ta) ta.value = a.note || '';
+      var done = answeredNow(d); if (done) n++;
+      card.classList.toggle('answered', done);
+      card.querySelector('.saved').textContent = a.at ? 'Saved ' + T.fmt(a.at) : '';
+      var slot = card.querySelector('.replyslot'); slot.textContent = '';
+      if (replies[id(d)] && replies[id(d)].text) slot.appendChild(T.reply(replies[id(d)]));
+    });
+    $('round-send').disabled = sending || !db || n < current.length;
+    if (!sending) $('round-state').textContent = current.length ? n + ' of ' + current.length + ' answered.' : '';
+  }
+
+  function decidedList() {
+    var done = decisions.filter(decided);
+    if (!done.length) return;
+    var sec = $('decided-sec'); sec.hidden = false;
+    var det = el('details', 'done'); det.appendChild(el('summary', null, 'Decided So Far (' + done.length + ')'));
+    var ol = el('ol');
+    done.forEach(function (d) { ol.appendChild(el('li', null, 'Q' + d.n + ' · ' + d.title + ': ' + optText(d, d.decided))); });
+    det.appendChild(ol); sec.appendChild(det);
+  }
+
+  function planList() {
+    if (!branches.length) return;
+    $('plan-sec').hidden = false;
+    var byWave = {};
+    branches.forEach(function (b) { (byWave[b.wave || 1] = byWave[b.wave || 1] || []).push(b); });
+    var box = $('waves');
+    Object.keys(byWave).sort(function (a, b) { return a - b; }).forEach(function (w) {
+      // An EGM plan's waves order dependencies (a wave starts once what it builds on merged); a fix plan's waves are gates.
+      var gate = P.design
+        ? (byWave[w].every(function (b) { return b.mode === 'design'; }) ? 'pages for your sign-off'
+           : (w === '1' ? 'starts first' : 'starts once the branches it builds on merge'))
+        : ({'1': 'no sign-off needed', '2': 'mockup signed off first', '3': 'schema page signed off first'}[w] || '');
+      box.appendChild(el('h3', null, 'Wave ' + w + (gate ? ' · ' + gate : '')));
+      var list = el('div', 'branches');
+      byWave[w].forEach(function (b) {
+        var card = el('div', 'branch');
+        var h = el('div', 'dh'); h.appendChild(el('h3', null, b.title || b.slug));
+        h.appendChild(el('span', 'chip', b.mode === 'design' ? 'Design: ' + (b.deliver || ['mockup']).join(' + ') : 'Build')); card.appendChild(h);
+        var sub = el('div', 'sub'); sub.appendChild(el('span', 'mono', b.slug));
+        if ((b.defects || []).length) sub.appendChild(el('span', null, 'Fixes ' + b.defects.join(', ')));
+        if ((b.tests || []).length) sub.appendChild(el('span', null, 'Re-verifies ' + b.tests.join(', ')));
+        if ((b.cujs || []).length) sub.appendChild(el('span', null, 'Delivers ' + b.cujs.join(', ')));
+        if ((b.depends_on || []).length) sub.appendChild(el('span', null, 'After ' + b.depends_on.join(', ')));
+        card.appendChild(sub);
+        if (b.scope) card.appendChild(el('p', 'ink2', b.scope));
+        if ((b.files || []).length) card.appendChild(el('p', 'files', 'Files: ' + b.files.join(' · ')));
+        if ((b.tasks || []).length) {
+          var ul = el('ul', 'tasks');
+          b.tasks.forEach(function (t) {
+            var li = el('li'); li.appendChild(el('span', null, t.id + ' · ' + t.text + ' '));
+            if (t.test) li.appendChild(el('span', 'test', t.test)); ul.appendChild(li);
+          });
+          card.appendChild(ul);
+        } else card.appendChild(el('span', 'notasks', 'Not broken into tasks yet'));
+        T.attachAsk(card, 'Branch ' + b.slug, card);
+        list.appendChild(card);
+      });
+      box.appendChild(list);
+    });
+  }
+
+  function tables() {
+    var ds = P.defects || [];
+    if (ds.length) {
+      $('defects-sec').hidden = false;
+      ds.forEach(function (d) {
+        var tr = el('tr');
+        [d.id, d.test, d.title, d.type, d.why, d.fix, d.size, d.gate, d.branch].forEach(function (v, i) { tr.appendChild(el('td', i === 0 || i === 8 ? 'mono' : null, v || '')); });
+        $('defects').appendChild(tr);
+      });
+    }
+    var g = P.guide || [];
+    if (g.length) { $('guide-sec').hidden = false; g.forEach(function (x) { $('guide').appendChild(el('li', null, x[0] + ': ' + x[1])); }); }
+  }
+
+  function ready() {
+    var open = decisions.filter(function (d) { return !decided(d); });
+    var untasked = branches.filter(function (b) { return !(b.tasks || []).length; });
+    if (P.signed_off && P.signed_off.at) return {ok: false, text: 'Signed off ' + P.signed_off.at + ' by ' + P.signed_off.by + '. Work has started from this plan.', done: true};
+    if (signoff) return {ok: false, text: 'Signed off ' + T.fmt(signoff.at) + '. Claude records it and starts the first wave.', done: true};
+    if (open.length) return {ok: false, text: open.length + (open.length === 1 ? ' question is' : ' questions are') + ' still open. Sign-off opens once every question is answered and recorded.'};
+    if (!branches.length) return {ok: false, text: 'The plan is being drawn up from your answers.'};
+    if (untasked.length) return {ok: false, text: untasked.map(function (b) { return b.slug; }).join(', ') + ' not broken into tasks yet.'};
+    return {ok: true, text: 'Every question is answered and every branch is broken into tasks. Sign off to start the first wave.'};
+  }
+  function paintSignoff() {
+    var r = ready(), btn = $('signoff-btn');
+    $('signoff-text').textContent = r.text;
+    btn.disabled = !db || !r.ok; btn.textContent = r.done ? 'Signed Off' : 'Sign Off The Plan';
+  }
+
+  $('round-send').addEventListener('click', function () {
+    var text = 'Round ' + openRound + ' answered: ' + current.map(function (d) {
+      var a = answers[id(d)] || {};
+      return 'Q' + d.n + ' ' + (a.choice ? a.choice.toUpperCase() + ' (' + optText(d, a.choice) + ')' : 'note only') + (a.note ? ', note: ' + a.note.trim().slice(0, 300) : '');
+    }).join('; ');
+    sending = true; $('round-send').disabled = true;   // until the send has gone or failed: a second click sends it twice
+    T.send($('round-sec'), P.page_title || 'Plan', text, $('round-state'))
+      .then(function () { sending = false; $('round-send').disabled = false; });
+  });
+  $('signoff-btn').addEventListener('click', function () {
+    if (!db) return;
+    var rec = {at: new Date().toISOString(), by: T.me(), covers: decisions.map(id), branches: branches.map(function (b) { return b.slug; })};
+    $('signoff-btn').disabled = true;
+    db.doc('signoff/plan').set(rec).then(function () {
+      signoff = rec; paintSignoff();
+      T.notify($('signoff'), 'Signed off the plan "' + (P.page_title || P.title) + '": ' + branches.length + ' branches, ' + decisions.length + ' decisions.', $('signoff-text'));
+    }, function () { $('signoff-btn').disabled = false; setState('Couldn’t sign off. Try again.', 'err'); });
+  });
+
+  summary(); buildRound(); decidedList(); planList(); tables(); paintRound(); paintSignoff();
+  T.connect({
+    status: function (text) { setState(text, 'err'); },
+    db: function (d) {
+      db = d; setState('Answers save as you click.'); paintRound(); paintSignoff();
+      T.watch(d, 'answers', function (m) {
+        Object.keys(m).forEach(function (k) { var l = answers[k]; if (!l || !l.at || (m[k].at && m[k].at >= l.at)) answers[k] = m[k]; });
+        paintRound();
+      });
+      T.watch(d, 'signoff', function (m) { signoff = m.plan && m.plan.at ? m.plan : null; paintSignoff(); });
+      T.watch(d, 'replies', function (m) { replies = m; paintRound(); $('qa-sec').hidden = !T.questions(replies, $('qa')); });
+    },
+    comments: function () {}
+  });
+})();
+</script>

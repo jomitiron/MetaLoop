@@ -1,0 +1,374 @@
+<title>__TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* A metaloop live page: one chain (or the verify loop), drawn from its own database (live_sync.py writes it).
+   Rendered by live_page.py into the run folder; never committed. Soft theme: indigo primary, semantic trios. */
+:root{
+  --bg:#fafbfc; --card:#ffffff; --panel:#f5f6f8; --ink:#0f1729; --ink-2:#475467; --muted:#667085; --soft:#98a2b3;
+  --line:#e4e7ec; --line-strong:#c4cad3; --divider:#eef0f3; --primary:#2563eb; --primary-hover:#1d4ed8; --on-primary:#ffffff;
+  --tint:#eff4ff; --tint-100:#dbeafe; --ring:#eff4ff;
+  --ok-fg:#067647; --ok-bg:#ecfdf3; --ok-bd:#d1fae5; --ok-dot:#22c55e;
+  --warn-fg:#b54708; --warn-bg:#fffaeb; --warn-bd:#fef3c7; --warn-dot:#f59e0b;
+  --info-fg:#2563eb; --info-bg:#eff4ff; --info-bd:#dbeafe; --info-dot:#2563eb;
+  --draft-fg:#667085; --draft-bg:#f5f6f8; --draft-bd:#e4e7ec; --draft-dot:#98a2b3;
+  --ui:"Inter",system-ui,"Segoe UI",Roboto,sans-serif; --mono:"JetBrains Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  color-scheme:dark;
+  --bg:#0f131b; --card:#161b26; --panel:#1b2130; --ink:#e8ecf3; --ink-2:#b4bccb; --muted:#8f99ab; --soft:#6b7486;
+  --line:#2a3242; --line-strong:#3a4458; --divider:#222938; --primary:#7aa2ff; --primary-hover:#9bb8ff; --on-primary:#0f131b;
+  --tint:#1a2440; --tint-100:#263764; --ring:#1f2d52;
+  --ok-fg:#5fd49a; --ok-bg:#12291f; --ok-bd:#1d3d2e; --ok-dot:#34d399;
+  --warn-fg:#f3b364; --warn-bg:#2a2114; --warn-bd:#43331a; --warn-dot:#f59e0b;
+  --info-fg:#7aa2ff; --info-bg:#1a2440; --info-bd:#263764; --info-dot:#7aa2ff;
+  --draft-fg:#a3acbd; --draft-bg:#1b2130; --draft-bd:#2a3242; --draft-dot:#6b7486;
+}}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0f131b; --card:#161b26; --panel:#1b2130; --ink:#e8ecf3; --ink-2:#b4bccb; --muted:#8f99ab; --soft:#6b7486;
+  --line:#2a3242; --line-strong:#3a4458; --divider:#222938; --primary:#7aa2ff; --primary-hover:#9bb8ff; --on-primary:#0f131b;
+  --tint:#1a2440; --tint-100:#263764; --ring:#1f2d52;
+  --ok-fg:#5fd49a; --ok-bg:#12291f; --ok-bd:#1d3d2e; --ok-dot:#34d399;
+  --warn-fg:#f3b364; --warn-bg:#2a2114; --warn-bd:#43331a; --warn-dot:#f59e0b;
+  --info-fg:#7aa2ff; --info-bg:#1a2440; --info-bd:#263764; --info-dot:#7aa2ff;
+  --draft-fg:#a3acbd; --draft-bg:#1b2130; --draft-bd:#2a3242; --draft-dot:#6b7486;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0; background:var(--bg); color:var(--ink); font:14px/1.55 var(--ui); font-variant-numeric:tabular-nums}
+.wrap{max-width:960px; margin:0 auto; padding-left:max(16px, env(safe-area-inset-left, 0px)); padding-right:max(16px, env(safe-area-inset-right, 0px)); padding-block:24px 64px}
+h1,h2,h3{margin:0; text-wrap:balance; font-weight:700}
+h1{font-size:20px} h2{font-size:14px; font-weight:600} h3{font-size:15px; font-weight:600}
+p{margin:0} a{color:var(--primary)} a:hover{color:var(--primary-hover)}
+button{font:inherit}
+:focus-visible{outline:none; box-shadow:0 0 0 4px var(--ring)}
+.btn{display:inline-flex; align-items:center; gap:7px; border:1px solid var(--primary); background:var(--primary); color:var(--on-primary); border-radius:8px; padding:7px 14px; font-size:13.5px; font-weight:600; cursor:pointer}
+.btn:hover{background:var(--primary-hover); border-color:var(--primary-hover)}
+.btn:disabled{background:var(--panel); color:var(--soft); border-color:var(--line); cursor:not-allowed}
+.btn.sec{background:var(--card); color:var(--ink); border-color:var(--line-strong)}
+.btn.sec:hover{background:var(--panel)}
+.btn.sm{padding:5px 11px; font-size:12.5px; border-radius:6px}
+.linkbtn{border:0; background:none; color:var(--primary); font-size:12.5px; font-weight:600; padding:0; cursor:pointer; justify-self:start}
+textarea{width:100%; font:13.5px/1.5 var(--ui); color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 12px; resize:vertical}
+textarea:focus{outline:none; border-color:var(--primary); box-shadow:0 0 0 4px var(--ring)}
+.live{background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden}
+.sec{padding-block:16px; padding-inline:20px; border-top:1px solid var(--divider); display:grid; gap:10px; min-width:0}
+.sec:first-child{border-top:0}
+.crumbs{font-size:12px; color:var(--muted)}
+.titlerow{display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between}
+.meta{display:flex; flex-wrap:wrap; gap:4px 14px; color:var(--ink-2); font-size:12.5px}
+.mono{font-family:var(--mono); font-size:12px}
+.muted{color:var(--muted)}
+.badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; border-radius:999px; padding:2px 10px 2px 8px; border:1px solid}
+.badge::before{content:""; width:7px; height:7px; border-radius:999px; background:var(--dot)}
+.t-ok{color:var(--ok-fg); background:var(--ok-bg); border-color:var(--ok-bd); --dot:var(--ok-dot)}
+.t-warn{color:var(--warn-fg); background:var(--warn-bg); border-color:var(--warn-bd); --dot:var(--warn-dot)}
+.t-info{color:var(--info-fg); background:var(--info-bg); border-color:var(--info-bd); --dot:var(--info-dot)}
+.t-draft{color:var(--draft-fg); background:var(--draft-bg); border-color:var(--draft-bd); --dot:var(--draft-dot)}
+.quiet{font-size:13.5px; color:var(--ink-2)}
+.card{border:1px solid var(--warn-bd); background:var(--warn-bg); border-radius:12px; padding:14px 16px; display:grid; gap:10px}
+.card.signin{border-color:var(--info-bd); background:var(--info-bg)}
+.card .holding{font-size:12.5px; color:var(--warn-fg); font-weight:600}
+.card.signin .holding{color:var(--info-fg)}
+.card .q{color:var(--ink); font-weight:500; white-space:pre-wrap}
+.opts{display:grid; gap:6px}
+.opt{display:flex; gap:10px; align-items:flex-start; background:var(--card); border:1px solid var(--line); border-radius:10px; padding:9px 12px; cursor:pointer}
+.opt input{margin-top:3px; accent-color:var(--primary)}
+.rec{font-size:11px; font-weight:600; color:var(--ok-fg); background:var(--ok-bg); border-radius:4px; padding:0 6px; margin-left:6px; white-space:nowrap}
+.items{display:grid; gap:8px; margin:0; padding:0; list-style:none}
+.items li{background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 12px; display:grid; gap:6px}
+.items .who{font-size:12px; color:var(--muted)}
+.items .prop{font-size:13px; color:var(--ink-2)}
+.row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.state{font-size:12.5px; color:var(--muted)}
+.steps{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(var(--n, 8), minmax(0,1fr)); gap:6px}
+.steps li{display:grid; gap:5px; font-size:11.5px; color:var(--muted); min-width:0}
+.steps .bar{height:4px; border-radius:999px; background:var(--panel); border:1px solid var(--line)}
+.steps li.done .bar{background:var(--ok-dot); border-color:var(--ok-dot)}
+.steps li.now .bar{background:var(--primary); border-color:var(--primary)}
+.steps li.held .bar{background:var(--warn-dot); border-color:var(--warn-dot)}
+.steps li.now, .steps li.held{color:var(--ink); font-weight:600}
+.steps .t{font-size:11px; color:var(--soft); font-weight:400}
+@media (max-width:640px){ .steps{grid-template-columns:repeat(4, minmax(0,1fr)); row-gap:12px} }
+.counts{display:flex; flex-wrap:wrap; gap:6px}
+.tasks{list-style:none; margin:0; padding:0; display:grid; gap:4px}
+.tasks li{display:grid; grid-template-columns:20px minmax(0,1fr); gap:6px; font-size:13px; color:var(--ink-2)}
+.tasks li .tick{color:var(--soft)} .tasks li.done .tick{color:var(--ok-fg)}
+.tasks .test{font-family:var(--mono); font-size:11.5px; color:var(--muted); overflow-wrap:anywhere}
+.feed{list-style:none; margin:0; padding:0; display:grid}
+.feed li{display:grid; grid-template-columns:76px minmax(0,1fr); gap:10px; padding-block:7px; border-top:1px solid var(--divider); font-size:13.5px; color:var(--ink-2); overflow-wrap:anywhere}
+.feed li:first-child{border-top:0}
+.feed time{font-size:12px; color:var(--muted); font-family:var(--mono); white-space:nowrap}
+.feed .warn{color:var(--warn-fg)} .feed .ok{color:var(--ok-fg)}
+.answered{display:grid; gap:8px}
+.answered .a{font-size:13.5px; color:var(--ink-2)}
+.reply{border:1px solid var(--tint-100); background:var(--tint); border-radius:10px; padding:9px 12px; display:grid; gap:3px}
+.reply .who{font-size:12px; font-weight:600; color:var(--primary)}
+.reply .txt{display:grid; gap:6px; font-size:13.5px}
+.ask{display:grid; gap:6px}
+.askbtn{justify-self:start; border:0; background:none; color:var(--primary); font-size:12.5px; font-weight:600; padding:0; cursor:pointer}
+.askbox{display:grid; gap:6px}
+.askstate{font-size:12.5px; color:var(--muted)}
+.qa-item{display:grid; gap:6px; border-top:1px solid var(--divider); padding-top:10px}
+.qa-item .where{font-size:11.5px; color:var(--muted); font-weight:600}
+.qa-item .q{font-size:13.5px}
+.hint{font-size:12px; color:var(--muted)}
+.others{display:flex; flex-wrap:wrap; gap:6px}
+.chip{display:inline-flex; gap:6px; align-items:center; font-size:12px; border:1px solid var(--line); background:var(--panel); border-radius:6px; padding:3px 8px; color:var(--ink-2); text-decoration:none}
+@media (prefers-reduced-motion: reduce){ *{transition:none!important; animation:none!important} }
+</style>
+
+<div class="wrap">
+  <article class="live" id="live">
+    <header class="sec">
+      <span class="crumbs" id="crumbs"></span>
+      <div class="titlerow"><h1 id="title"></h1><span class="badge t-draft" id="badge">Loading</span></div>
+      <div class="meta" id="meta"></div>
+    </header>
+    <section class="sec" id="attn" aria-live="polite"><p class="quiet" id="status">Loading the chain&rsquo;s state&hellip;</p></section>
+    <section class="sec" id="progress" aria-label="Progress">
+      <ol class="steps" id="steps"></ol>
+      <div class="counts" id="counts"></div>
+      <ul class="tasks" id="tasks"></ul>
+    </section>
+    <section class="sec">
+      <h2>What It Has Done</h2>
+      <ul class="feed" id="feed"></ul>
+      <button type="button" class="linkbtn" id="more" hidden></button>
+    </section>
+    <section class="sec" id="answered-sec" hidden>
+      <h2>Answered</h2>
+      <div class="answered" id="answered"></div>
+    </section>
+    <section class="sec" id="qa-sec">
+      <h2>Questions</h2>
+      <div id="qa"></div>
+      <label for="ask" class="hint">Ask about this chain. Claude answers here, from the chain&rsquo;s notes, commits and logs.</label>
+      <textarea id="ask" rows="2" maxlength="3500" placeholder="e.g. Why did the fix drop the older queued copy?"></textarea>
+      <div class="row"><button type="button" class="btn sm" id="send">Send to Claude</button><span class="state" id="send-state" role="status"></span></div>
+      <span class="hint">@claude in a plain comment doesn&rsquo;t reach Claude. Use Send to Claude.</span>
+    </section>
+    <footer class="sec">
+      <span class="hint" id="peers-label" hidden>Other pages in this run</span>
+      <div class="others" id="peers"></div>
+      <span class="hint">This page updates as the work goes on. It lives in the run folder and is never committed.</span>
+    </footer>
+  </article>
+</div>
+
+<script>/*__TWO_WAY__*/</script>
+<script>
+var CONFIG = __CONFIG__;
+(function () {
+  var C = CONFIG, T = TwoWay, el = T.el, $ = function (id) { return document.getElementById(id); };
+  var S = null, events = {}, asks = {}, reviews = {}, answers = {}, approvals = {}, replies = {}, db = null, all = false;
+  var drafts = {}, shown = '';   // what the owner has picked and typed on each card, kept until it is sent
+  $('title').textContent = C.title;
+  $('crumbs').textContent = C.run + (C.kind === 'verify' ? ' · verify loop' : ' · ' + C.slug);
+
+  function newest(map) {
+    var best = null;
+    Object.keys(map).forEach(function (k) { if (!best || (map[k].seq || 0) > (best.seq || 0)) best = map[k]; });
+    return best;
+  }
+  function isAnswered(id) { return !!(answers[id] || (S && S.answered && S.answered[id] !== undefined)); }
+  function safe(url) { return /^https:\/\//.test(String(url || '')); }   // links come from run state: https only
+
+  function header() {
+    if (!S) return;
+    var b = $('badge'); b.className = 'badge t-' + (S.badge.tone || 'draft'); b.textContent = S.badge.text;
+    var m = $('meta'); m.textContent = '';
+    if (S.branch) m.appendChild(el('span', 'mono', S.branch));
+    if (S.pr && S.pr.number) {
+      var a = el(safe(S.pr.url) ? 'a' : 'span', null, 'PR #' + S.pr.number);
+      if (safe(S.pr.url)) { a.href = S.pr.url; a.target = '_blank'; a.rel = 'noopener'; }
+      m.appendChild(a);
+    }
+    if (S.started) m.appendChild(el('span', null, 'started ' + T.fmt(S.started)));
+    if (S.sessions) m.appendChild(el('span', null, S.sessions + (S.sessions === 1 ? ' session' : ' sessions')));
+    if (S.cost) m.appendChild(el('span', null, '$' + Number(S.cost).toFixed(2) + ' so far'));
+    if (S.at) m.appendChild(el('span', 'muted', 'last step ' + T.ago(S.at)));
+  }
+
+  function answerCard(q) {
+    var card = el('div', 'card' + (q.kind === 'signin' ? ' signin' : ''));
+    var hold = q.kind === 'signin' ? 'Waiting for you to sign in, in the run’s Chrome window'
+      : q.kind === 'needs' ? (C.kind === 'verify' ? 'Set aside until you answer; the other tests go on' : 'The chain is stopped until you answer')
+      : 'Asked ' + T.hhmm(q.at) + ' · carrying on with A' + (S && S.holding ? '; the pull request waits for your answer' : ', and the pull request waits for your answer');
+    card.appendChild(el('span', 'holding', hold));
+    card.appendChild(el('h3', null, q.title));
+    card.appendChild(el('p', 'q', q.question));
+    if (q.kind === 'signin') { T.attachAsk(card, q.title, card); return card; }
+    var name = 'ans-' + q.id.replace(/[^A-Za-z0-9_-]/g, '_'), draft = drafts[q.id] = drafts[q.id] || {};
+    if (q.options && q.options.length) {
+      var opts = el('div', 'opts');
+      q.options.forEach(function (o) {
+        var lab = el('label', 'opt'), r = el('input'); r.type = 'radio'; r.name = name; r.value = o.key;
+        r.checked = o.key === (draft.choice || q.recommend);
+        r.addEventListener('change', function () { draft.choice = o.key; });
+        var sp = el('span'); sp.appendChild(el('b', null, o.key.toUpperCase() + '. ' + o.text));
+        if (o.key === q.recommend) sp.appendChild(el('span', 'rec', 'Recommended'));
+        lab.appendChild(r); lab.appendChild(sp); opts.appendChild(lab);
+      });
+      card.appendChild(opts);
+    }
+    var ta = el('textarea'); ta.rows = 2; ta.maxLength = 2000; ta.id = name + '-note';
+    ta.placeholder = q.options && q.options.length ? 'Anything to add (optional)' : 'Your answer';
+    ta.value = draft.note || ''; ta.addEventListener('input', function () { draft.note = ta.value; });
+    ta.setAttribute('aria-label', 'Your answer to ' + q.title); card.appendChild(ta);
+    var row = el('div', 'row'), go = el('button', 'btn sm', 'Send answer'); go.type = 'button';
+    var st = el('span', 'state'); st.setAttribute('role', 'status');
+    go.addEventListener('click', function () {
+      var pick = card.querySelector('input[name="' + name + '"]:checked'), note = ta.value.trim();
+      if (!pick && !note) { ta.focus(); return; }
+      if (!db) { st.textContent = 'Not saved: open the published page to answer.'; return; }
+      var opt = pick ? q.options.filter(function (o) { return o.key === pick.value; })[0] : null;
+      var rec = {choice: pick ? pick.value : '', note: note, at: new Date().toISOString(), by: T.me()};
+      go.disabled = true; st.textContent = 'Saving…';
+      db.doc('answers/' + q.id).set(rec).then(function () {
+        st.textContent = 'Saved. The chain reads it at its next step.';
+        T.notify(card, 'Answer to ' + q.id + ' (' + q.title + ') on ' + C.slug + ': ' +
+          (opt ? opt.key.toUpperCase() + '. ' + opt.text : '') + (note ? (opt ? ' Note: ' : '') + note : ''), st);
+      }, function () { go.disabled = false; st.textContent = 'Couldn’t save. Try again.'; });
+    });
+    row.appendChild(go); row.appendChild(st); card.appendChild(row);
+    return card;
+  }
+
+  function reviewCard(items) {
+    var card = el('div', 'card');
+    card.appendChild(el('span', 'holding', 'Ready for your review' + (S && S.pr && S.pr.number ? ' · PR #' + S.pr.number : '')));
+    card.appendChild(el('h3', null, (S && S.pr && S.pr.number ? 'PR #' + S.pr.number + ': ' : '') + items.length +
+      (items.length === 1 ? ' Review Comment To Decide' : ' Review Comments To Decide')));
+    var ul = el('ul', 'items');
+    items.forEach(function (r) {
+      var li = el('li'); li.appendChild(el('span', 'who', r.n + ' · ' + r.who));
+      li.appendChild(el('p', null, r.what));
+      var p = el('p', 'prop', 'Proposed: ' + r.proposal + ' '); p.appendChild(el('span', 'rec', 'Recommended: ' + r.rec));
+      li.appendChild(p); ul.appendChild(li);
+    });
+    card.appendChild(ul);
+    var ta = el('textarea'); ta.rows = 2; ta.maxLength = 2000; ta.id = 'review-note';
+    ta.placeholder = 'To change one, say which and how (optional)'; ta.setAttribute('aria-label', 'Note on the review comments');
+    ta.value = drafts.reviews || ''; ta.addEventListener('input', function () { drafts.reviews = ta.value; });
+    card.appendChild(ta);
+    var row = el('div', 'row'), go = el('button', 'btn sm', items.length === 1 ? 'Approve as recommended' : 'Approve all as recommended');
+    go.type = 'button';
+    var st = el('span', 'state'); st.setAttribute('role', 'status');
+    go.addEventListener('click', function () {
+      if (!db) { st.textContent = 'Not saved: open the published page to approve.'; return; }
+      var at = new Date().toISOString(), note = ta.value.trim();
+      go.disabled = true; st.textContent = 'Saving…';
+      Promise.all(items.map(function (r) {
+        return db.doc('approvals/' + r.id).set({choice: note ? 'see note' : 'as recommended', note: note, at: at, by: T.me()});
+      })).then(function () {
+        st.textContent = 'Saved.';
+        T.notify(card, 'Review comments on ' + C.slug + ' (' + items.map(function (r) { return r.id; }).join(', ') + '): ' +
+          (note ? 'approved with a note: ' + note : 'approve all as recommended'), st);
+      }, function () { go.disabled = false; st.textContent = 'Couldn’t save. Try again.'; });
+    });
+    row.appendChild(go); row.appendChild(st); card.appendChild(row);
+    return card;
+  }
+
+  function attention() {
+    var box = $('attn');
+    var open = Object.keys(asks).map(function (k) { return asks[k]; }).filter(function (q) { return !isAnswered(q.id); })
+      .sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); });
+    var waiting = Object.keys(reviews).map(function (k) { return reviews[k]; }).filter(function (r) { return !approvals[r.id]; })
+      .sort(function (a, b) { return a.n - b.n; });
+    var sig = JSON.stringify([open, waiting, S ? [S.holding, S.pr && S.pr.number, S.quiet] : null]);
+    if (sig === shown) return;   // nothing new here (a progress update): leave the cards, and what is being typed, alone
+    shown = sig;
+    var focus = box.contains(document.activeElement) ? document.activeElement.id : '';
+    box.textContent = '';
+    open.forEach(function (q) { box.appendChild(answerCard(q)); });
+    if (waiting.length) box.appendChild(reviewCard(waiting));
+    if (!open.length && !waiting.length) box.appendChild(el('p', 'quiet', (S && S.quiet) || 'Nothing needs you.'));
+    if (focus && $(focus)) $(focus).focus();
+  }
+
+  function progress() {
+    if (!S) return;
+    var ol = $('steps'); ol.textContent = ''; ol.style.setProperty('--n', Math.max(1, (S.steps || []).length));
+    (S.steps || []).forEach(function (s) {
+      var li = el('li', s.state); li.appendChild(el('span', 'bar')); li.appendChild(el('span', null, s.name));
+      li.appendChild(el('span', 't', s.state === 'now' ? 'now' : s.state === 'held' ? 'paused' : s.t ? T.hhmm(s.t) : ''));
+      if (s.state === 'now' || s.state === 'held') li.setAttribute('aria-current', 'step');
+      ol.appendChild(li);
+    });
+    var c = $('counts'); c.textContent = '';
+    if (S.counts) [['pass', 'passed', 'ok'], ['fail', 'failed', 'warn'], ['blocked', 'set aside', 'draft'], ['running', 'running', 'info'], ['todo', 'to do', 'draft']]
+      .forEach(function (k) { if (S.counts[k[0]]) c.appendChild(el('span', 'badge t-' + k[2], S.counts[k[0]] + ' ' + k[1])); });
+    var ul = $('tasks'); ul.textContent = '';
+    (S.tasks || []).forEach(function (t) {
+      var li = el('li', t.done ? 'done' : ''); li.appendChild(el('span', 'tick', t.done ? '✓' : '○'));
+      var body = el('span'); body.appendChild(el('span', null, t.id + ' · ' + t.text + ' '));
+      if (t.test) body.appendChild(el('span', 'test', t.test));
+      li.appendChild(body); ul.appendChild(li);
+    });
+    $('progress').hidden = !(S.steps || []).length && !S.counts && !(S.tasks || []).length;
+  }
+
+  function feed() {
+    var list = Object.keys(events).map(function (k) { return events[k]; }).sort(function (a, b) { return b.seq - a.seq; });
+    var ul = $('feed'); ul.textContent = '';
+    (all ? list : list.slice(0, 7)).forEach(function (e) {
+      var li = el('li'); li.appendChild(el('time', null, e.at ? T.hhmm(e.at) : ''));
+      li.appendChild(el('span', e.tone || null, e.text)); ul.appendChild(li);
+    });
+    if (!list.length) ul.appendChild(el('li', null, 'Nothing yet.'));
+    var more = $('more'); more.hidden = list.length <= 7; more.textContent = all ? 'Show the latest 7' : 'Show all ' + list.length;
+  }
+
+  function answered() {
+    var box = $('answered'); box.textContent = '';
+    Object.keys(asks).map(function (k) { return asks[k]; }).filter(function (q) { return isAnswered(q.id); })
+      .sort(function (a, b) { return String(a.at).localeCompare(String(b.at)); })
+      .forEach(function (q) {
+        var a = answers[q.id], said = a ? ((a.choice ? a.choice.toUpperCase() : '') + (a.note ? (a.choice ? ': ' : '') + a.note : ''))
+          : (S && S.answered && S.answered[q.id]) || 'answered';
+        var item = el('div', 'qa-item'); item.appendChild(el('span', 'where', q.id + ' · ' + q.title));
+        item.appendChild(el('p', 'a', 'Your answer: ' + said));
+        if (replies[q.id] && replies[q.id].text) item.appendChild(T.reply(replies[q.id]));
+        box.appendChild(item);
+      });
+    $('answered-sec').hidden = !box.childNodes.length;
+  }
+
+  function peers() {
+    var box = $('peers'); box.textContent = '';
+    ((S && S.peers) || []).filter(function (p) { return safe(p.url); }).forEach(function (p) {
+      var a = el('a', 'chip', p.slug); a.href = p.url; a.target = '_blank'; a.rel = 'noopener'; box.appendChild(a);
+    });
+    $('peers-label').hidden = !box.childNodes.length;
+  }
+
+  function render() { header(); attention(); progress(); feed(); answered(); T.questions(replies, $('qa')); peers(); }
+  $('more').addEventListener('click', function () { all = !all; feed(); });
+  $('send').addEventListener('click', function () {
+    var ta = $('ask'), text = ta.value.trim(), go = $('send'); if (!text) { ta.focus(); return; }
+    go.disabled = true;   // until the send has gone or failed: a second click would send it twice
+    T.send($('qa-sec'), 'Question about ' + C.slug, text, $('send-state'), function () { ta.value = ''; })
+      .then(function () { go.disabled = false; });
+  });
+  setInterval(header, 60000);
+  render();
+  T.connect({
+    status: function (text) { var s = $('status'); if (s) s.textContent = text; },
+    db: function (d) {
+      db = d;
+      T.watch(d, 'state', function (m) { S = newest(m); render(); });
+      T.watch(d, 'events', function (m) { events = m; feed(); });
+      T.watch(d, 'asks', function (m) { asks = m; attention(); answered(); });
+      T.watch(d, 'reviews', function (m) { reviews = m; attention(); });
+      T.watch(d, 'answers', function (m) { answers = m; attention(); answered(); });
+      T.watch(d, 'approvals', function (m) { approvals = m; attention(); });
+      T.watch(d, 'replies', function (m) { replies = m; answered(); T.questions(replies, $('qa')); });
+    }
+  });
+})();
+</script>

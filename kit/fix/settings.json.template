@@ -1,0 +1,33 @@
+{
+  "enabledPlugins": { "aws-core@claude-plugins-official": false },
+  "permissions": {
+    "allow": [
+      "Read", "Glob", "Grep", "Skill",
+      "Edit(./**)", "Write(./**)",
+      "Bash({{PYTHON}} {{RUN}}/task.py *)", "Bash({{PYTHON}} {{RUN}}/gate.py*)",
+      "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)", "Bash(git show*)", "Bash(git add *)",
+      "Bash(git commit *)", "Bash(git fetch*)", "Bash(git merge origin/{{BASE}}*)", "Bash(git rev-parse*)",
+      "Bash(git branch --show-current)", "Bash(git restore *)", "Bash(git rm *)", "Bash(git mv *)",
+      "Bash(git push -u origin {{BRANCH_PREFIX}}{{SLUG_PREFIX}}*)", "Bash(git push origin {{BRANCH_PREFIX}}{{SLUG_PREFIX}}*)",
+      "Bash(gh pr create *)", "Bash(gh pr view *)", "Bash(gh pr checks *)", "Bash(gh pr diff *)",
+      "Bash(gh run view *)", "Bash(gh run list *)", "Bash({{PYTHON}} {{RUN}}/pr_read.py *)",
+      "Bash(grep *)", "Bash(ls *)", "Bash(cat *)", "Bash(head *)", "Bash(tail *)", "Bash(wc *)",
+      "Bash(find *)", "Bash(sed -n *)", "Bash(sort *)", "Bash(date*)"
+    ],
+    "deny": [
+      "Agent", "Task", "Workflow", "AskUserQuestion", "Artifact", "WebFetch", "WebSearch",
+      "CronCreate", "ScheduleWakeup", "RemoteTrigger", "EnterWorktree", "ExitWorktree",
+      "Bash(git push --force*)", "Bash(git push -f*)", "Bash(git push * --force*)", "Bash(git push * -f*)",
+      "Bash(git push *:*)", "Bash(git push *+*)", "Bash(git reset --hard*)", "Bash(git rebase*)",
+      "Bash(git checkout main*)", "Bash(git checkout {{BASE}}*)", "Bash(git branch -D*)", "Bash(git worktree*)",
+      "Bash(gh pr merge*)", "Bash(gh pr close*)", "Bash(gh pr comment*)", "Bash(gh pr review*)", "Bash(gh pr edit*)",
+      "Bash(gh api*)", "Bash(gh pr ready*)", "Bash(rm -rf *)", "Bash(docker *)", "Bash(curl *)",
+      "Bash(brew *)", "Bash(sudo *)", "Bash(pip install*)", "Bash(pip3 install*)", "Bash({{PYTHON}} -m pip *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [ { "matcher": "*", "hooks": [ { "type": "command", "command": "{{PYTHON}} {{RUN}}/ctx_guard.py", "timeout": 30 } ] } ],
+    "PostToolUseFailure": [ { "matcher": "*", "hooks": [ { "type": "command", "command": "{{PYTHON}} {{RUN}}/ctx_guard.py", "timeout": 30 } ] } ],
+    "Stop": [ { "hooks": [ { "type": "command", "command": "{{PYTHON}} {{RUN}}/end_gate.py", "timeout": 30 } ] } ]
+  }
+}

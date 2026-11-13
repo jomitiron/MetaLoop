@@ -57,7 +57,7 @@ signed off. A run that starts from a list of tickets instead of a verify run pla
 3. **Classify each defect:** BUG (fix it), DECISION (the owner chooses the behaviour), GUIDE (the test plan is wrong). Give
    each a gate: none, decision, mockup (any pixel a user sees changes), schema (any stored field, collection or index
    changes; fields never stored need no page).
-4. **Grill, in rounds, on the plan page** ([skills/grilling](../../grilling/SKILL.md)). The decisions form a tree; a
+4. **Grill, in rounds, on the plan page** (the `grilling` skill). The decisions form a tree; a
    round is its frontier: every question whose prerequisites are settled, each a `decisions` entry with `round`, a short
    `title` (Every Word Capitalized), `context` (what happened, with real ids from the run, and where in the process it
    bites), `options` and the `recommend`ed one. Group questions by situation: one situation is one question whose
@@ -67,7 +67,7 @@ signed off. A run that starts from a list of tickets instead of a verify run pla
      "Round N is ready: <k> questions → <link>". The page's "Send This Round To Claude" wakes you.
    - Read the answers: `ArtifactData` list, collection `answers` (doc ids `d<n>`). Record each as the decision's
      `"decided"` (a note can amend the option; keep its words). Write a reply in `replies/d<n>` when an answer needs one.
-   - [skills/domain-modeling](../../domain-modeling/SKILL.md) as the answers land: each decision worth keeping goes into
+   - the `domain-modeling` skill as the answers land: each decision worth keeping goes into
      the feature's decisions log as a D-numbered entry; each term the owner settled goes into `docs/glossary.md`.
    - Recompute the frontier and publish the next round, until it is empty: nothing left silently assumed.
 5. **Draw up the plan** on the same page: branches by wave (wave 1 = no gate, wave 2 = mockup-gated, wave 3 =

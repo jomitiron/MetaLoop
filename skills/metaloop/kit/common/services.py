@@ -78,6 +78,7 @@ class Service:
         self.vars = dict(slot=slot, run=run or "", root=root or "", id=f"{name}-{slot}-{uuid.uuid4().hex[:8]}",
                          port=int(spec["port"]) + slot if spec.get("port") else None, dir=None)
         self.pid, self.started, self.reused, self.temp_dir, self.proc = None, False, False, None, None
+        self.last_check = None  # (key, rc, output) of the latest up/ready check, for the error when it never passes
         if record:  # rebuilt from services.json, to stop it
             self.vars.update(record["vars"])
             self.pid, self.started, self.temp_dir = record.get("pid"), record.get("started"), record.get("temp_dir")
@@ -86,20 +87,39 @@ class Service:
     def cmd(self, key):
         return project.fill(self.spec[key], **self.vars) if self.spec.get(key) else ""
 
-    def check(self, key):
+    def check(self, key, timeout=20):
         c = self.cmd(key)
-        return bool(c) and sh(c, timeout=20, cwd=self.vars["dir"] or None)[0] == 0
+        if not c:
+            return False
+        rc, out = sh(c, timeout=timeout, cwd=self.vars["dir"] or None)
+        self.last_check = (key, rc, out)
+        return rc == 0
 
     def wait(self, key, secs):
         end = time.time() + secs
         while time.time() < end:
-            if self.check(key):
+            # a check that hangs (a port that accepts and never answers) must not outlast the wait itself
+            if self.check(key, timeout=max(1, min(20, end - time.time()))):
                 return True
             rc = self.proc.poll() if self.proc else None
             if rc not in (None, 0):  # it died; exit 0 is a start command that daemonised, so keep waiting
                 raise ServiceError(f"{self.name}'s start command exited {rc}: {self.log_tail()}")
             time.sleep(1)
         return False
+
+    def why_not(self):
+        """What a service that never came up looked like: the last check, the port, the start command, its log."""
+        bits = []
+        if self.last_check:
+            key, rc, out = self.last_check
+            bits.append(f"its {key} check last exited {rc}" + (f" ({out[-200:]})" if out else ""))
+        if self.vars["port"]:
+            bits.append(f"port {self.vars['port']} " + ("accepts connections" if listening(self.vars["port"]) else "is not open"))
+        if self.proc:
+            rc = self.proc.poll()
+            bits.append("the start command is still running" if rc is None else f"the start command exited {rc}")
+        bits.append(f"log: {self.log_tail()}")
+        return "; ".join(bits)
 
     def log_tail(self):
         try:
@@ -142,14 +162,14 @@ class Service:
                 self.started = True
             if spec.get("ready"):
                 if not self.wait("up" if spec.get("up") else "ready", timeout):
-                    raise ServiceError(f"{self.name} did not come up within {timeout}s"
-                                       + (f": {self.log_tail()}" if spec.get("start") else ""))
+                    raise ServiceError(f"{self.name} did not come up within {timeout}s: {self.why_not()}")
                 if spec.get("init"):
                     rc, out = sh(self.cmd("init"), timeout=timeout, cwd=self.vars["dir"])
                     if rc != 0:
                         raise ServiceError(f"{self.name}: init failed: {out[-300:]}")
                     if not self.wait("ready", timeout):
-                        raise ServiceError(f"{self.name} was initialised but never became ready within {timeout}s")
+                        raise ServiceError(f"{self.name} was initialised but never became ready within {timeout}s: "
+                                           f"{self.why_not()}")
             if new and spec.get("seed"):
                 env = dict(os.environ, **self.env())
                 root = self.vars["root"]  # the app's checkout, where its migrations and seed scripts live

@@ -5,11 +5,14 @@ the run's settings; you never run them from here. Nothing in the kit assumes a l
 project's own commands, services and tools come from its profile, `.metaloop/project.json`
 ([reference/project.md](../reference/project.md)), which `init_project.py` writes from the presets in `presets/`.
 
+`<kit>` below is this folder. Installed as a plugin, it is in Claude Code's plugin cache and the skill gives Claude its
+path (`${CLAUDE_SKILL_DIR}/kit`); in a clone of the MetaLoop repository it is `skills/metaloop/kit`.
+
 ## The project profile
 
 ```bash
 # from inside the project's repository; --list shows every preset
-python3 skills/metaloop/kit/init_project.py --stack <node|python|ruby|go|rust|java-maven|java-gradle|dotnet|php|custom> \
+python3 <kit>/init_project.py --stack <node|python|ruby|go|rust|java-maven|java-gradle|dotnet|php|custom> \
     [--db <postgres|mysql|mongodb|redis|sqlite>]... [--via docker|native]
 ```
 
@@ -40,8 +43,8 @@ anything (see [reference/orchestrator.md](../reference/orchestrator.md), "Missin
 
 ```bash
 # from inside the repo (Windows: Git Bash, with a short root like /c/w; macOS: python3, e.g. ~/w)
-python skills/metaloop/kit/init_run.py fix    /c/w/<name>  OWNER=<you> SLUG_PREFIX=<area>-fix-
-python skills/metaloop/kit/init_run.py verify /c/w/<name>  OWNER=<you> "PAUSE_FOR=<the one sign-in that may pause the run>"
+python <kit>/init_run.py fix    /c/w/<name>  OWNER=<you> SLUG_PREFIX=<area>-fix-
+python <kit>/init_run.py verify /c/w/<name>  OWNER=<you> "PAUSE_FOR=<the one sign-in that may pause the run>"
 cd /c/w/<name> && python doctor.py && ./preflight.sh  # doctor exits 0, preflight prints ok
 ./launch.sh "<what>" ./start.sh [queue-file MAX_PAR]  # detached: mintty (Windows) or tmux (macOS)
 ```
@@ -123,7 +126,7 @@ Machine fallbacks (doctor.py says when each applies):
 
 ## Changing the kit
 
-`bash skills/metaloop/kit/selftest.sh` renders both kinds of run from a test profile and runs the scripts against stubs
+`bash <kit>/selftest.sh` renders both kinds of run from a test profile and runs the scripts against stubs
 (claude, pmset, stand-in test runners and services), every test-output parser against sample output, and the native
 PostgreSQL and MongoDB presets for real where those servers are installed. Run it on every platform a change touches
 (macOS: it runs under the system's bash 3.2; `SELFTEST_BASH=<bash>` picks another). Windows branches stay as they were

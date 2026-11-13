@@ -1,0 +1,12 @@
+{
+  "name": "metaloop",
+  "displayName": "MetaLoop",
+  "description": "Run large engineering work as unattended Claude Code loops with owner gates: plan with Google's EGM, fan out parallel fix chains in git worktrees, live-verify the app end to end, and keep every session inside its context window. Any language, framework or database.",
+  "author": {
+    "name": "jomitiron",
+    "url": "https://github.com/jomitiron"
+  },
+  "homepage": "https://github.com/jomitiron/MetaLoop",
+  "repository": "https://github.com/jomitiron/MetaLoop",
+  "keywords": ["orchestration", "parallel", "worktrees", "spec", "egm", "verification", "context-window"]
+}

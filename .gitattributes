@@ -1,7 +1,7 @@
 # The kit runs under Git Bash, where a CRLF line ending in a shell script breaks it ("\r: command not found"), and
 # core.autocrlf would check these files out with CRLF on Windows. Keep every kit file LF. (init_run.py also writes
 # LF when it copies the kit into a run folder.)
-kit/** text eol=lf
+skills/metaloop/kit/** text eol=lf
 
 # Docs are LF too, so diffs show content changes only.
 *.md text eol=lf

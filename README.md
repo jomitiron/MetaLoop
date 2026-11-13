@@ -27,48 +27,111 @@ MetaLoop     make_briefs.py -> parallel chains (red, green, docs, gate, security
 after merge  /egm:egm-drift-report -> the owner updates the doc or the code -> re-verify
 ```
 
-The full procedure is in [reference/egm.md](reference/egm.md). `PLANNER=grill` plans the original way, with grilling
+The full procedure is in [reference/egm.md](skills/metaloop/reference/egm.md). `PLANNER=grill` plans the original way, with grilling
 rounds on the plan page.
 
 ## Layout
 
+This repository is a Claude Code plugin and the marketplace that lists it.
+
 | Path | What |
 |---|---|
-| [SKILL.md](SKILL.md) | The skill: when to offer a loop, the roles, the non-negotiables, the lifecycle. |
-| [reference/](reference/) | The orchestrator's procedures, the project profile, the fix and verify loops, the EGM hand-off, and pitfalls met in practice. |
-| [kit/](kit/) | The scripts `init_run.py` copies into a run folder (see [kit/README.md](kit/README.md)). |
-| [kit/presets/](kit/presets/) | Ready-made project profiles: stacks, and the databases and services their checks need. |
+| [.claude-plugin/](.claude-plugin/) | `plugin.json` (the plugin) and `marketplace.json` (the catalog Claude Code installs it from). |
+| [skills/metaloop/SKILL.md](skills/metaloop/SKILL.md) | The skill: when to offer a loop, the roles, the non-negotiables, the lifecycle. |
+| [skills/metaloop/reference/](skills/metaloop/reference/) | The orchestrator's procedures, the project profile, the fix and verify loops, the EGM hand-off, and pitfalls met in practice. |
+| [skills/metaloop/kit/](skills/metaloop/kit/) | The scripts `init_run.py` copies into a run folder (see [its README](skills/metaloop/kit/README.md)). |
+| [skills/metaloop/kit/presets/](skills/metaloop/kit/presets/) | Ready-made project profiles: stacks, and the databases and services their checks need. |
 | [evals/](evals/) | Behaviour evals for the skill (`claude plugin eval .`). |
+| [.github/workflows/check.yml](.github/workflows/check.yml) | Validates the plugin and runs the kit's self-test on every pull request. |
 
 ## Install
 
-MetaLoop runs from inside the repository it works on, at `skills/metaloop`:
+MetaLoop installs as a Claude Code plugin, once per machine, and works in any repository:
 
 ```bash
-git clone https://github.com/jomitiron/MetaLoop.git skills/metaloop
+claude plugin install metaloop --marketplace jomitiron/MetaLoop
 ```
 
-For planning with EGM, install its plugin in Claude Code and start a new session:
+That adds this repository as the `metaloop` marketplace and installs `metaloop@metaloop`. Start a new session: Claude
+picks the skill up when the work fits (or run `/metaloop:metaloop`).
+
+For planning with EGM, install Google's plugin too:
 
 ```bash
-claude plugin marketplace add google/elephant-goldfish-model
+claude plugin install egm --marketplace google/elephant-goldfish-model
+```
+
+### Keep it up to date
+
+Turn on auto-update once: in Claude Code, `/plugin` → **Marketplaces** → `metaloop` → **Enable auto-update**. Claude
+Code then checks in the background during a session and installs a newer MetaLoop, which loads at the next start (or
+after `/reload-plugins`). Auto-update is off by default for marketplaces outside Anthropic's own. Without it, update by
+hand:
+
+```bash
+claude plugin update metaloop@metaloop
+```
+
+A run already under way keeps the copy of the kit it was made with; running `init_run.py` on it again brings in the new
+kit and keeps the run's settings and any runbook or settings you edited (the new render goes beside them as `.new`).
+
+### Set up a team's repository
+
+To give everyone who works in a repository MetaLoop and EGM, with MetaLoop updating itself, commit this to the
+repository's `.claude/settings.json`:
+
+```json
+{
+  "extraKnownMarketplaces": {
+    "metaloop": {
+      "source": { "source": "github", "repo": "jomitiron/MetaLoop" },
+      "autoUpdate": true
+    },
+    "egm": {
+      "source": { "source": "github", "repo": "google/elephant-goldfish-model" }
+    }
+  },
+  "enabledPlugins": {
+    "metaloop@metaloop": true,
+    "egm@egm": true
+  }
+}
+```
+
+Claude Code registers both marketplaces for each person once they trust the folder. Enabling a plugin there doesn't
+install it, so each person runs these once in the repository:
+
+```bash
+claude plugin install metaloop@metaloop --scope project
 ```
 
 ```bash
-claude plugin install egm@egm
+claude plugin install egm@egm --scope project
 ```
 
-Describe the project once, from the presets, and commit the file it writes (`--list` shows them all):
+### Use it in a project
+
+Describe the project once, from the presets, and commit the file it writes, `.metaloop/project.json`. Ask Claude to set
+MetaLoop up for the repository and it runs this from the installed kit (`--list` shows every preset):
 
 ```bash
-python3 skills/metaloop/kit/init_project.py --stack node --db postgres
+python3 <kit>/init_project.py --stack node --db postgres
 ```
 
-Then start a run and let `doctor.py` say what else the machine needs:
+Then it starts a run (`init_run.py fix|verify <run folder> OWNER=<you>`) and has the run's `doctor.py` say what else
+the machine needs. `<kit>` is the kit folder inside the installed plugin; Claude knows its path.
 
-```bash
-python3 skills/metaloop/kit/init_run.py fix ~/w/<name> OWNER=<you>
-```
+## Releasing changes
+
+Every commit on `main` is a release. `plugin.json` has no `version`, so Claude Code versions MetaLoop by commit: people
+with auto-update on get a merged change at their next session, and everyone else on `claude plugin update`.
+
+- Merge only what is ready. [check.yml](.github/workflows/check.yml) validates the plugin and runs the kit's self-test
+  on every pull request. Run the [evals](#evals) before merging a change to `SKILL.md` or the references.
+- Try a change before it ships: from a clone, `claude --plugin-dir .` loads the working copy for that session instead
+  of the installed plugin.
+- To hold users on numbered releases instead, add `"version": "1.0.0"` to `.claude-plugin/plugin.json` and raise it for
+  each release (`claude plugin tag --push` tags it). Users then get nothing new until the version changes.
 
 ## Stacks and services
 
@@ -81,10 +144,10 @@ per gate slot, on its own port, removed after), how the verify loop builds, star
 services, data kept between runs and seeded once), the tools the machine needs, and the commands sessions may run.
 Whatever it can't know, such as how this particular app starts, it marks `FILL IN`, and the run won't start until each
 is filled in. Anything the presets don't cover is a few lines of JSON: any command, any test runner (give it a summary
-pattern), any service with a start command and a ready check. [reference/project.md](reference/project.md) has every
+pattern), any service with a start command and a ready check. [reference/project.md](skills/metaloop/reference/project.md) has every
 field.
 
-MetaLoop also points to companion skills a repository may have (`skills/grilling`, `skills/domain-modeling` for
+MetaLoop also uses companion skills where the repository or the user has them (`grilling` and `domain-modeling`, for
 `PLANNER=grill`) and follows the repository's own instructions (CLAUDE.md, AGENTS.md) in every session.
 
 ## Evals
@@ -98,6 +161,8 @@ claude plugin eval . --judge-model sonnet
 ```
 
 ## Self-test
+
+From a clone of this repository:
 
 ```bash
 bash skills/metaloop/kit/selftest.sh

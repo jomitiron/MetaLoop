@@ -610,7 +610,7 @@ init fix "$T/fix" GATE_SKIP= KNOWN_FLAKES= KNOWN_PLATFORM_FAILURES=
 : > "$SELFTEST_LOG"; out=$(gate_run)
 if ! echo "$out" | grep -q '^gate PASS'; then
     echo "  gate diagnostic: $out"
-    for f in "$wt"/.fixloop/logs/gate-*.log "$wt"/.fixloop/logs/gate-runner.err; do
+    for f in "$wt"/.fixloop/logs/gate-*.log "$wt"/.fixloop/logs/gate-runner.err "$wt"/.fixloop/logs/service-*.log; do
         [ -f "$f" ] && { echo "  --- $f"; cat "$f"; }
     done
 fi

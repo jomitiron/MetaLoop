@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Self-test of the metaloop kit on THIS machine. It renders a fix run and a verify run from a test project profile, runs
-# the scripts against stubs (claude, pmset, a stand-in toolchain `st-run`, a stand-in service: python's http.server), every
+# the scripts against stubs (claude, pmset, a stand-in toolchain `st-run`, a stand-in web service `st_serve.py`), every
 # test-output parser against sample output, every stack preset, and the native PostgreSQL and MongoDB presets for real
 # where those servers are installed (plus Chrome and tmux).
 # No real session, build or push; nothing outside a temp folder is touched.
@@ -60,6 +60,22 @@ case "$1" in
          echo "Tests:       3 passed, 3 total" ;;
 esac
 EOF
+# st_serve.py <port> [dir]: a stand-in web service. Not `python -m http.server`: its server looks up the name of the
+# address it binds (socket.getfqdn) before it listens, which takes over 20 seconds where reverse DNS is slow (GitHub's
+# macOS runners), longer than a service may take to come up.
+cat > "$STUBS/st_serve.py" <<'EOF'
+import functools, http.server, socketserver, sys
+
+class Server(http.server.ThreadingHTTPServer):
+    def server_bind(self):  # no name lookup
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
+
+port, folder = int(sys.argv[1]), (sys.argv[2] if len(sys.argv) > 2 else ".")
+with Server(("127.0.0.1", port), functools.partial(http.server.SimpleHTTPRequestHandler, directory=folder)) as s:
+    print(f"serving {folder} on 127.0.0.1:{port}", flush=True)
+    s.serve_forever()
+EOF
 chmod +x "$STUBS/claude" "$STUBS/st-run"
 ln -s "${SELFTEST_BASH:-$(command -v bash)}" "$STUBS/bash"
 export PATH="$STUBS:$PATH" SELFTEST_LOG="$T/steps.log"
@@ -77,11 +93,11 @@ p = {
   {"name": "unit", "run": "st-run test unit", "tests": "jest", "slots": 3},
   {"name": "integration", "run": "st-run test integration", "tests": "jest", "services": ["web"],
    "skippable": "CI's integration job runs it"}]},
- "services": {"web": {"port": $SVC_PORT, "start": "exec '$PY' -u -m http.server {port} --bind 127.0.0.1 --directory {dir}",
+ "services": {"web": {"port": $SVC_PORT, "start": "exec '$PY' -u '$STUBS/st_serve.py' {port} {dir}",
                       "up": "curl -s -o /dev/null http://127.0.0.1:{port}/", "init": "echo pong > {dir}/ping.txt",
                       "ready": "curl -sf http://127.0.0.1:{port}/ping.txt >/dev/null", "timeout": 20,
                       "env": {"SVC_URL": "http://127.0.0.1:{port}"}}},
- "verify": {"url": "http://127.0.0.1:$APP_PORT", "health": "/", "start": "exec '$PY' -m http.server {app_port} --bind 127.0.0.1",
+ "verify": {"url": "http://127.0.0.1:$APP_PORT", "health": "/", "start": "exec '$PY' -u '$STUBS/st_serve.py' {app_port}",
             "services": {"web": {"port": $VSVC_PORT, "persist": "$T/persist-web", "reuse": True,
                                  "seed": "echo seeded >> '$T/seed.log'"}},
             "provides": ["webhooks"]},
@@ -539,7 +555,7 @@ check "... handing back the same from-line, so a stop logged meanwhile is still 
 
 echo "== platform helpers"
 p=$(free_port)
-"$PY" -m http.server "$p" --bind 127.0.0.1 >/dev/null 2>&1 &
+"$PY" "$STUBS/st_serve.py" "$p" >/dev/null 2>&1 &
 wait_for 20 curl -s "http://127.0.0.1:$p/" -o /dev/null
 pid=$(bash -c "source '$T/fix/platform.sh' && port_pid $p")
 check "port_pid finds the process listening on :$p ($pid)" test -n "$pid"
@@ -645,7 +661,7 @@ init fix "$T/fix" GATE_SKIP= PROJECT="$T/dead.json"
 out=$(gate_run)
 check "a service that never comes up fails the gate, with why" sh -c "echo \"\$1\" | grep -q '^gate FAIL' && echo \"\$1\" | grep -q 'web did not come up within 4s'" _ "$out"
 check "... and is stopped" wait_for 10 sh -c "! pgrep -f 'sleep 611' >/dev/null"
-"$PY" -m http.server "$SVC_PORT" --bind 127.0.0.1 >/dev/null 2>&1 & squat=$!
+"$PY" "$STUBS/st_serve.py" "$SVC_PORT" >/dev/null 2>&1 & squat=$!
 wait_for 20 curl -s "http://127.0.0.1:$SVC_PORT/" -o /dev/null
 init fix "$T/fix" PROJECT="$T/project.json"
 out=$(gate_run); kill $squat 2>/dev/null

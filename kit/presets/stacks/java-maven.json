@@ -1,0 +1,33 @@
+{
+ "about": "Java with Maven (./mvnw when the repo has it), JUnit through Surefire; Spring Boot defaults for the verify loop.",
+ "requires": [
+  {
+   "tool": "java",
+   "for": "builds and tests",
+   "install": "a JDK: brew install --cask temurin (macOS) · adoptium.net",
+   "who": "owner",
+   "check": "command -v java"
+  }
+ ],
+ "gate": {
+  "steps": [
+   {
+    "name": "verify",
+    "run": "$([ -x ./mvnw ] && echo ./mvnw || echo mvn) -B verify",
+    "tests": "maven",
+    "slots": 2,
+    "db": true
+   }
+  ]
+ },
+ "verify": {
+  "url": "http://localhost:8080",
+  "health": "/actuator/health",
+  "build": "$([ -x ./mvnw ] && echo ./mvnw || echo mvn) -B -DskipTests package",
+  "start": "FILL IN: the command that serves the app on {app_port}, e.g. java -jar target/app.jar --server.port={app_port}"
+ },
+ "chain_allow": [
+  "./mvnw *",
+  "mvn *"
+ ]
+}

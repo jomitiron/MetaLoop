@@ -1,0 +1,21 @@
+{
+ "about": "Redis 7. Exports REDIS_URL.",
+ "docker": {
+  "port": 56379,
+  "start": "docker run --rm --name metaloop-{id} -p 127.0.0.1:{port}:6379 redis:7",
+  "ready": "docker exec metaloop-{id} redis-cli ping | grep -q PONG",
+  "stop": "docker rm -f metaloop-{id} >/dev/null",
+  "env": {"REDIS_URL": "redis://127.0.0.1:{port}/0"},
+  "requires": [{"tool": "docker", "check": "docker info >/dev/null 2>&1", "for": "Redis in a container",
+                "install": "install and start Docker Desktop (or another Docker engine)", "who": "owner"}]
+ },
+ "native": {
+  "port": 56379,
+  "start": "exec redis-server --port {port} --bind 127.0.0.1 --dir {dir} --save '' --appendonly no",
+  "ready": "redis-cli -p {port} ping | grep -q PONG",
+  "env": {"REDIS_URL": "redis://127.0.0.1:{port}/0"},
+  "requires": [{"tool": "redis-server", "check": "command -v redis-server && command -v redis-cli", "for": "Redis",
+                "install": "brew install redis (macOS) · apt install redis-server (Linux)", "who": "claude"}]
+ },
+ "verify": {"port": 56479, "reuse": true}
+}

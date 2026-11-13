@@ -1,0 +1,38 @@
+{
+ "about": "Ruby on Rails with Bundler and RSpec (Minitest: give the test step a tests object of its own).",
+ "requires": [
+  {
+   "tool": "ruby",
+   "for": "builds and tests",
+   "install": "brew install ruby (macOS) · rbenv · rvm",
+   "who": "owner",
+   "check": "command -v ruby && command -v bundle"
+  }
+ ],
+ "gate": {
+  "steps": [
+   {
+    "name": "install",
+    "run": "bundle install --quiet"
+   },
+   {
+    "name": "test",
+    "run": "bundle exec rspec",
+    "tests": "rspec",
+    "slots": 3,
+    "db": true
+   }
+  ]
+ },
+ "verify": {
+  "url": "http://localhost:3000",
+  "health": "/up",
+  "build": "bundle install --quiet && bin/rails db:prepare",
+  "start": "bin/rails server -p {app_port} -b 127.0.0.1"
+ },
+ "chain_allow": [
+  "bundle install*",
+  "bundle exec rspec *",
+  "bin/rails *"
+ ]
+}

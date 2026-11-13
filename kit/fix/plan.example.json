@@ -1,0 +1,40 @@
+{
+  "title": "Accounting sync smoke-test fixes",
+  "owner": "James",
+  "plan_url": "https://claude.ai/artifact/<plan page>",
+  "results_url": "https://claude.ai/artifact/<results page>",
+  "base_note": "Investigation read develop c0e8cd6; line numbers may have drifted.",
+  "defects": [
+    {"id": "D2", "test": "B2", "title": "Retry bills the customer captured at queue time", "type": "BUG",
+     "why": "The retry replays the customer id captured in the queued payload (billing/sync/retry, line 75)",
+     "fix": "Read the current customer link at retry time; supersede earlier queued pushes of the same order",
+     "size": "M", "gate": "none", "branch": "retry-current-customer"},
+    {"id": "D7", "test": "C2", "title": "Order panel says 'Not sent' for a company that isn't syncing", "type": "BUG",
+     "why": "The order panel's sync status cell has no not-syncing state (orders/panel/sync-status, line 49)", "fix": "Carry the exclusion into the cell",
+     "size": "M", "gate": "mockup", "branch": "order-panel-not-syncing"}
+  ],
+  "decisions": [
+    {"n": 4, "round": 1, "title": "Resend After The Customer Confirms",
+     "context": "What happened, in two sentences, with the order and invoice numbers from the run, and where in the process it bites.",
+     "options": [{"key": "a", "text": "Refuse Resend past PendingPayment; Re-issue is the one route"},
+                 {"key": "b", "text": "Allow Resend as a reminder while in collection"}],
+     "recommend": "a", "decided": null}
+  ],
+  "branches": [
+    {"slug": "retry-current-customer", "title": "Retry Bills The Right Customer", "wave": 1, "mode": "build",
+     "defects": ["D2"], "tests": ["B2"],
+     "scope": "BINDING scope in plain words: what to change, what not to touch, which decisions apply.",
+     "tasks": [{"id": "T1", "text": "A retry bills the customer the order has when the retry runs",
+                "test": "sync retry: bills the customer the order has now"},
+               {"id": "T2", "text": "An older queued push of the same order is dropped, and the order's history says so",
+                "test": "sync retry: supersedes an older queued push"}],
+     "notes": ["Investigation note with file:line evidence", "Another note"]},
+    {"slug": "order-panel-not-syncing", "title": "Order Panel Shows Not Syncing", "wave": 2, "mode": "design",
+     "deliver": ["mockup"], "defects": ["D7"], "tests": ["C2"],
+     "scope": "What the mockup must show, which signed-off designs it builds on, open questions to put at the top.",
+     "tasks": [{"id": "T1", "text": "The mockup shows the order panel for a company that isn't syncing, today beside proposed"}],
+     "notes": []}
+  ],
+  "guide": [["A3", "'Step 2 of 3' only shows on a tenant whose setup is still pending."]],
+  "signed_off": null
+}

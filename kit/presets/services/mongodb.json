@@ -1,0 +1,27 @@
+{
+ "about": "MongoDB 7 as a single-node replica set (transactions work). Exports MONGO_URL.",
+ "docker": {
+  "port": 57017,
+  "start": "docker run --rm --name metaloop-{id} -p 127.0.0.1:{port}:27017 mongo:7 --replSet rs0 --bind_ip_all",
+  "up": "docker exec metaloop-{id} mongosh --quiet --eval 'db.runCommand({ping: 1}).ok' | grep -q 1",
+  "init": "docker exec metaloop-{id} mongosh --quiet --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: '127.0.0.1:27017'}]}).ok }\"",
+  "ready": "docker exec metaloop-{id} mongosh --quiet --eval 'db.hello().isWritablePrimary' | grep -q true",
+  "stop": "docker rm -f metaloop-{id} >/dev/null",
+  "timeout": 90,
+  "env": {"MONGO_URL": "mongodb://127.0.0.1:{port}/?directConnection=true"},
+  "requires": [{"tool": "docker", "check": "docker info >/dev/null 2>&1", "for": "MongoDB in a container",
+                "install": "install and start Docker Desktop (or another Docker engine)", "who": "owner"}]
+ },
+ "native": {
+  "port": 57017,
+  "start": "mkdir -p {dir}/data && exec mongod --replSet rs0 --port {port} --bind_ip 127.0.0.1 --dbpath {dir}/data",
+  "up": "mongosh --quiet 'mongodb://127.0.0.1:{port}/?directConnection=true' --eval 'db.runCommand({ping: 1}).ok' | grep -q 1",
+  "init": "mongosh --quiet 'mongodb://127.0.0.1:{port}/?directConnection=true' --eval \"try { rs.status().ok } catch (e) { rs.initiate({_id: 'rs0', members: [{_id: 0, host: '127.0.0.1:{port}'}]}).ok }\"",
+  "ready": "mongosh --quiet 'mongodb://127.0.0.1:{port}/?directConnection=true' --eval 'db.hello().isWritablePrimary' | grep -q true",
+  "env": {"MONGO_URL": "mongodb://127.0.0.1:{port}/?directConnection=true"},
+  "requires": [{"tool": "mongod", "check": "command -v mongod && command -v mongosh", "for": "MongoDB",
+                "install": "brew install mongodb/brew/mongodb-community mongosh (macOS) · the MongoDB apt repository (Linux)", "who": "claude"}]
+ },
+ "verify": {"port": 57117, "persist": "~/.metaloop/{project}/mongodb", "reuse": true,
+            "seed": "FILL IN: the command that loads the test data the app needs, or delete this line"}
+}

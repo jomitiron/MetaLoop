@@ -1,0 +1,35 @@
+{
+ "about": "Java or Kotlin with Gradle. Gradle prints no test totals, so the gate goes by its exit code (no zero-test check).",
+ "requires": [
+  {
+   "tool": "java",
+   "for": "builds and tests",
+   "install": "a JDK: brew install --cask temurin (macOS) · adoptium.net",
+   "who": "owner",
+   "check": "command -v java"
+  }
+ ],
+ "gate": {
+  "steps": [
+   {
+    "name": "build",
+    "run": "./gradlew build -x test --console=plain"
+   },
+   {
+    "name": "test",
+    "run": "./gradlew test --console=plain",
+    "slots": 2,
+    "db": true
+   }
+  ]
+ },
+ "verify": {
+  "url": "http://localhost:8080",
+  "health": "/actuator/health",
+  "build": "./gradlew assemble --console=plain",
+  "start": "FILL IN: the command that serves the app on {app_port}, e.g. ./gradlew bootRun --args='--server.port={app_port}'"
+ },
+ "chain_allow": [
+  "./gradlew *"
+ ]
+}

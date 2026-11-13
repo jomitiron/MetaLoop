@@ -1,0 +1,24 @@
+{
+ "about": "PostgreSQL 16. Exports DATABASE_URL.",
+ "docker": {
+  "port": 55432,
+  "start": "docker run --rm --name metaloop-{id} -e POSTGRES_PASSWORD=metaloop -e POSTGRES_DB=app -p 127.0.0.1:{port}:5432 postgres:16",
+  "ready": "docker exec metaloop-{id} pg_isready -h 127.0.0.1 -U postgres -d app",
+  "stop": "docker rm -f metaloop-{id} >/dev/null",
+  "timeout": 90,
+  "env": {"DATABASE_URL": "postgres://postgres:metaloop@127.0.0.1:{port}/app"},
+  "requires": [{"tool": "docker", "check": "docker info >/dev/null 2>&1", "for": "PostgreSQL in a container",
+                "install": "install and start Docker Desktop (or another Docker engine)", "who": "owner"}]
+ },
+ "native": {
+  "port": 55432,
+  "start": "mkdir -p {dir}/data && { [ -f {dir}/data/PG_VERSION ] || LC_ALL=C initdb -D {dir}/data -U postgres --auth=trust --no-locale -E UTF8 >/dev/null; } && LC_ALL=C exec postgres -D {dir}/data -p {port} -h 127.0.0.1 -c unix_socket_directories=''",
+  "ready": "pg_isready -h 127.0.0.1 -p {port} -U postgres",
+  "init": "createdb -h 127.0.0.1 -p {port} -U postgres app 2>/dev/null || true",
+  "env": {"DATABASE_URL": "postgres://postgres@127.0.0.1:{port}/app"},
+  "requires": [{"tool": "postgres", "check": "command -v initdb && command -v pg_isready && command -v createdb", "for": "PostgreSQL",
+                "install": "brew install postgresql@16 (macOS) · apt install postgresql (Linux)", "who": "claude"}]
+ },
+ "verify": {"port": 55532, "persist": "~/.metaloop/{project}/postgres", "reuse": true,
+            "seed": "FILL IN: the command that loads the test data the app needs (migrations, a seed script), or delete this line"}
+}

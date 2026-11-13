@@ -1,0 +1,2 @@
+# Live pages hold a run's state and are never committed (SKILL.md, non-negotiable 11).
+*.live.html

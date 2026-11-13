@@ -1,0 +1,45 @@
+{
+ "title": "Webhook delivery",
+ "owner": "James",
+ "plan_url": "https://claude.ai/artifact/<plan page>",
+ "design": {"path": "docs/designs/webhooks.md", "sha256": "<written by egm_plan.py import>", "title": "Webhook delivery",
+  "status": "Approved", "planner": "egm", "imported": "2026-11-13 10:20",
+  "url": "https://github.com/<owner>/<repo>/blob/develop/docs/designs/webhooks.md"},
+ "goals": ["Every subscribed event reaches its endpoint at least once, signed", "A failed delivery retries with backoff for 24 hours"],
+ "non_goals": ["Exactly-once delivery", "A UI for managing subscriptions"],
+ "cujs": [
+  {"id": "CUJ1", "title": "Endpoint receives a signed event", "given": "a subscription to order.created",
+   "when": "an order is created", "then": "the endpoint gets one POST with a valid HMAC signature header"},
+  {"id": "CUJ2", "title": "A failed delivery is retried", "given": "an endpoint that returns 503",
+   "when": "an event is delivered", "then": "it is retried at 1, 5 and 30 minutes, then hourly until 24 hours"}
+ ],
+ "files": [
+  {"path": "src/webhooks/signing.py", "action": "Create", "scope": "Python module", "changes": "sign(payload, secret) -> str; verify(...)"},
+  {"path": "src/webhooks/dispatcher.py", "action": "Create", "scope": "Python service", "changes": "Dispatcher.deliver(event): POST, record attempt"},
+  {"path": "src/webhooks/retry.py", "action": "Create", "scope": "Python worker", "changes": "schedule(attempt) with the backoff table"},
+  {"path": "src/events/bus.py", "action": "Modify", "scope": "Python module", "changes": "publish() hands subscribed events to Dispatcher"},
+  {"path": "tests/webhooks/test_signing.py", "action": "Create", "scope": "Unit test", "changes": "known-vector signatures"},
+  {"path": "tests/webhooks/test_dispatcher.py", "action": "Create", "scope": "Unit test", "changes": "delivery and retry hand-off"}
+ ],
+ "verify": ["Unit Tests: `pytest tests/webhooks`", "Static Analysis & Linting: `ruff check src/webhooks`"],
+ "defects": [],
+ "decisions": [],
+ "branches": [
+  {"slug": "webhook-signing", "title": "Events Are Signed", "wave": 1, "mode": "build",
+   "files": ["src/webhooks/signing.py", "tests/webhooks/test_signing.py"], "cujs": ["CUJ1"],
+   "scope": "Only the signing module and its tests. No delivery, no bus changes.",
+   "tasks": [{"id": "T1", "text": "A payload signs to the design's known vector", "test": "test_signing.py::test_known_vector"},
+             {"id": "T2", "text": "A tampered payload fails verification", "test": "test_signing.py::test_tampered"}]},
+  {"slug": "webhook-retry", "title": "Failed Deliveries Retry", "wave": 1, "mode": "build",
+   "files": ["src/webhooks/retry.py"], "cujs": ["CUJ2"],
+   "scope": "The backoff schedule only; Dispatcher calls it in the next wave.",
+   "tasks": [{"id": "T1", "text": "Attempt n is scheduled at the design's backoff time", "test": "test_retry.py::test_backoff_table"}]},
+  {"slug": "webhook-dispatch", "title": "Events Reach Their Endpoint", "wave": 2, "mode": "build",
+   "depends_on": ["webhook-signing", "webhook-retry"],
+   "files": ["src/webhooks/dispatcher.py", "src/events/bus.py", "tests/webhooks/test_dispatcher.py"], "cujs": ["CUJ1", "CUJ2"],
+   "scope": "Wire the bus to the dispatcher; sign with signing.sign, schedule failures with retry.schedule.",
+   "tasks": [{"id": "T1", "text": "A subscribed event is POSTed once with a signature header", "test": "test_dispatcher.py::test_delivers_signed"},
+             {"id": "T2", "text": "A 503 schedules attempt 2", "test": "test_dispatcher.py::test_503_schedules_retry"}]}
+ ],
+ "signed_off": null
+}

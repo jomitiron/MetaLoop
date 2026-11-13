@@ -1,0 +1,42 @@
+{
+ "about": ".NET with the dotnet CLI (a solution or project at the repo root, or name it in the commands).",
+ "requires": [
+  {
+   "tool": "dotnet",
+   "for": "builds and tests",
+   "install": "the .NET SDK the repo's global.json pins (dot.net)",
+   "who": "owner",
+   "check": "dotnet --version"
+  }
+ ],
+ "env": {
+  "LC_ALL": "en_US.UTF-8",
+  "LANG": "en_US.UTF-8"
+ },
+ "gate": {
+  "steps": [
+   {
+    "name": "build",
+    "run": "dotnet build -v q -nologo"
+   },
+   {
+    "name": "test",
+    "run": "dotnet test --no-build",
+    "tests": "dotnet",
+    "slots": 3,
+    "db": true
+   }
+  ]
+ },
+ "verify": {
+  "url": "http://localhost:5000",
+  "health": "/",
+  "build": "dotnet build -v q -nologo",
+  "start": "FILL IN: the command that serves the app on {app_url}, e.g. dotnet run --project src/Web --no-build --no-launch-profile --urls {app_url}"
+ },
+ "chain_allow": [
+  "dotnet build *",
+  "dotnet test *",
+  "dotnet restore *"
+ ]
+}

@@ -1,0 +1,41 @@
+{
+ "about": "Go modules (go test -v, so each test's PASS and FAIL lines can be counted).",
+ "requires": [
+  {
+   "tool": "go",
+   "for": "builds and tests",
+   "install": "brew install go (macOS) · go.dev/dl",
+   "who": "owner"
+  }
+ ],
+ "gate": {
+  "steps": [
+   {
+    "name": "build",
+    "run": "go build ./..."
+   },
+   {
+    "name": "vet",
+    "run": "go vet ./..."
+   },
+   {
+    "name": "test",
+    "run": "go test -v -count=1 ./...",
+    "tests": "go",
+    "slots": 3,
+    "db": true
+   }
+  ]
+ },
+ "verify": {
+  "url": "http://localhost:8080",
+  "health": "/",
+  "build": "go build ./...",
+  "start": "FILL IN: the command that serves the app on {app_port}, e.g. PORT={app_port} go run ./cmd/server"
+ },
+ "chain_allow": [
+  "go build *",
+  "go test *",
+  "go vet *"
+ ]
+}

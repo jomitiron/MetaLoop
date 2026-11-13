@@ -1,0 +1,8 @@
+{
+ "about": "SQLite: no server, a fresh database file per gate slot. Exports DATABASE_URL.",
+ "any": {
+  "env": {"DATABASE_URL": "sqlite:///{dir}/app.db", "SQLITE_PATH": "{dir}/app.db"}
+ },
+ "verify": {"persist": "~/.metaloop/{project}/sqlite",
+            "seed": "FILL IN: the command that creates and loads the test database, or delete this line"}
+}

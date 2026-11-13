@@ -608,6 +608,12 @@ gate_run() {  # waits for a verdict; prints --status
 }
 init fix "$T/fix" GATE_SKIP= KNOWN_FLAKES= KNOWN_PLATFORM_FAILURES=
 : > "$SELFTEST_LOG"; out=$(gate_run)
+if ! echo "$out" | grep -q '^gate PASS'; then
+    echo "  gate diagnostic: $out"
+    for f in "$wt"/.fixloop/logs/gate-*.log "$wt"/.fixloop/logs/gate-runner.err; do
+        [ -f "$f" ] && { echo "  --- $f"; cat "$f"; }
+    done
+fi
 check "gate passes ($(echo "$out" | head -1))" sh -c "echo \"\$1\" | grep -q '^gate PASS'" _ "$out"
 check "every step ran with the profile's env" sh -c "[ \$(grep -c '^st-run' '$SELFTEST_LOG') = 3 ] && ! grep '^st-run' '$SELFTEST_LOG' | grep -qv 'LC_ALL=en_US.UTF-8'"
 check "the step that names a service reached its own instance, set up by its init" grep -q "^svc=pong" "$SELFTEST_LOG"
@@ -692,6 +698,11 @@ check "wait_verify: a progress return hands back the same from-line, so a stop l
 echo "== the verify loop's services: kept, seeded once, reused"
 sv() { (cd "$T/ver" && "$PY" services.py "$@" --state state) 2>"$T/sv.err"; }
 out=$(sv up --for verify)
+if ! echo "$out" | grep -q "export SVC_URL=http://127.0.0.1:$VSVC_PORT"; then
+    echo "  verify service diagnostic: $out"
+    [ ! -f "$T/sv.err" ] || { echo "  --- services.py stderr"; cat "$T/sv.err"; }
+    [ ! -f "$T/ver/logs/service-web.log" ] || { echo "  --- service-web.log"; cat "$T/ver/logs/service-web.log"; }
+fi
 check "up starts the verify instance on its own port and prints its env" sh -c "echo \"\$1\" | grep -q \"export SVC_URL=http://127.0.0.1:$VSVC_PORT\"" _ "$out"
 check "... seeds its new persist folder once" sh -c "[ \$(grep -c seeded '$T/seed.log') = 1 ] && [ -f '$T/persist-web/.metaloop-ready' ]"
 check "env gives the same export lines to the build and the app" sh -c "(cd '$T/ver' && '$PY' services.py env --state state) | grep -q 'SVC_URL=http://127.0.0.1:$VSVC_PORT'"

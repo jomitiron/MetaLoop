@@ -1,6 +1,7 @@
 {
   "enabledPlugins": {
-    "aws-core@claude-plugins-official": false
+    "aws-core@claude-plugins-official": false,
+    "metaloop@metaloop": false
   },
   "permissions": {
     "allow": [

@@ -1,5 +1,5 @@
 {
-  "enabledPlugins": { "aws-core@claude-plugins-official": false },
+  "enabledPlugins": { "aws-core@claude-plugins-official": false, "metaloop@metaloop": false },
   "permissions": {
     "allow": [
       "Read", "Glob", "Grep", "Skill",

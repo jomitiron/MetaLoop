@@ -89,8 +89,8 @@ Write the answers into the runbook as the run's hard rules (step 0). If the owne
 10. **Planning always happens, and is signed off.** Every fix run plans first, including one that starts from a list of
     tickets: with EGM by default (`PLANNER=egm`: an approved, Goldfish-reviewed design on the base, imported by
     `egm_plan.py`, whose split passes `egm_plan.py check` and the fan-out Goldfish), or by grilling rounds on the plan
-    page (`PLANNER=grill`: [skills/grilling](../grilling/SKILL.md), with
-    [skills/domain-modeling](../domain-modeling/SKILL.md) writing each decision into the feature's decisions log and each
+    page (`PLANNER=grill`: the `grilling` skill, with
+    the `domain-modeling` skill writing each decision into the feature's decisions log and each
     settled term into `docs/glossary.md`); then every branch broken into tasks, each with the test that proves it.
     `make_briefs.py` writes no brief until `sign_plan.py` records the owner's sign-off, and the runner starts no branch
     without it.
@@ -104,18 +104,19 @@ Write the answers into the runbook as the run's hard rules (step 0). If the owne
 
 ## The lifecycle
 
-Each phase lists its commands; the details are in the reference files. `<run>` is a run folder made by
-`kit/init_run.py`.
+Each phase lists its commands; the details are in the reference files. The kit is at `${CLAUDE_SKILL_DIR}/kit` (the
+reference files call it `<kit>`). `<run>` is a run folder made by `<kit>/init_run.py`, which copies the kit's scripts
+into it: a run keeps the copy it was made with, and picks up a newer kit only when `init_run.py` is run on it again.
 
 ### 0. Set up (orchestrator + owner)
 - Agree the hard rules with the owner (the set-up questions in "Proposing it") and write them into the run's runbook: the ceiling, the model pins, the pause
   rule, budgets, the approved database writes, who merges.
 - The project profile, once per repository: `.metaloop/project.json` says how this project builds, tests and serves,
   which services (databases, caches, queues) its checks need, and which tools. Write it with
-  `python skills/metaloop/kit/init_project.py --stack <stack> [--db <service>]...` from the presets (Node, Python,
+  `python "${CLAUDE_SKILL_DIR}/kit/init_project.py" --stack <stack> [--db <service>]...` from the presets (Node, Python,
   Ruby, Go, Rust, Java, .NET, PHP; Postgres, MySQL, MongoDB, Redis, SQLite; Docker or native), fill in what it marks,
   commit it ([reference/project.md](reference/project.md)). Nothing else in MetaLoop knows the stack.
-- `python skills/metaloop/kit/init_run.py verify|fix <run> OWNER=<name> [KEY=VALUE ...]` (`python3` on macOS), fill the
+- `python "${CLAUDE_SKILL_DIR}/kit/init_run.py" verify|fix <run> OWNER=<name> [KEY=VALUE ...]` (`python3` on macOS), fill the
   runbook's FILL IN parts.
 - `doctor.py` in the run folder lists what this machine is missing, what the run does without each piece and who
   installs it. Clear it before the first start ([reference/orchestrator.md](reference/orchestrator.md), "Missing
@@ -148,11 +149,11 @@ Each phase lists its commands; the details are in the reference files. `<run>` i
   Goldfish review the split (`/egm:egm-review-loop` with `fanout_readiness.md`); fix `plan.json` and re-render until it
   converges. Then the plan page and sign-off below; `sign_plan.py` runs the check again.
 - **Without EGM** (`PLANNER=grill`, [reference/orchestrator.md](reference/orchestrator.md), "Planning (Every Fix Run)"):
-  grill the owner in rounds ([skills/grilling](../grilling/SKILL.md)) on the plan page: each round is every question
+  grill the owner in rounds (the `grilling` skill) on the plan page: each round is every question
   that can be answered now, numbered, each with a recommendation. Facts come from the agents, never from the owner.
   `plan_page.py plan.json plan.html "<Title>"`, publish, and post one line in the chat: "Round N is ready → <link>". Read
   the answers from the page (`ArtifactData` list `answers`), record each as the decision's `decided`, and work out the
-  next round; [skills/domain-modeling](../domain-modeling/SKILL.md) writes each decision and term down as it lands.
+  next round; the `domain-modeling` skill writes each decision and term down as it lands.
 - When no question is left, draw up `plan.json`: defects (why with file:line, fix, size, gate), the decisions by round,
   branches by wave (wave 1 has no gate, wave 2 needs a mockup, wave 3 a schema page), each with a `title` and its `tasks`,
   each task with the test that proves it.

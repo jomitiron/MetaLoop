@@ -4,12 +4,20 @@
 # test-output parser against sample output, every stack preset, and the native PostgreSQL and MongoDB presets for real
 # where those servers are installed (plus Chrome and tmux).
 # No real session, build or push; nothing outside a temp folder is touched.
-#   bash skills/metaloop/kit/selftest.sh          (from inside the repository; macOS, Linux or Windows Git Bash)
+#   bash skills/metaloop/kit/selftest.sh   (macOS, Linux or Windows Git Bash; from a clone of the MetaLoop repository,
+#   or as bash <kit>/selftest.sh from an installed copy, where a scratch repository stands in for the project)
 # Run it after any change to the kit, on every platform you changed it for. Exit 0 = every check passed.
 set -u
 KIT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO="$(git -C "$KIT" rev-parse --show-toplevel)"
+REPO="$(git -C "$KIT" rev-parse --show-toplevel 2>/dev/null)"
 T="$(mktemp -d "${TMPDIR:-/tmp}/metaloop-selftest.XXXXXX")"
+# Outside a git checkout (an installed plugin): a scratch repository with one commit stands in for the project.
+CLONE=1
+if [ -z "$REPO" ]; then
+    CLONE=0; REPO="$T/project-repo"
+    git init -q -b main "$REPO" && git -C "$REPO" -c user.name=selftest -c user.email=selftest@example.invalid \
+        commit -q --allow-empty -m init || { echo "could not make a scratch repository in $REPO"; exit 1; }
+fi
 STUBS="$T/stubs"; mkdir -p "$STUBS"
 PY="$(command -v python3 || command -v python)"
 case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) WIN=1 ;; *) WIN=0 ;; esac
@@ -457,7 +465,11 @@ check "... with its settings filled in" sh -c "grep -q 'Retry Bills The Right Cu
 check "... and prints the capabilities to publish it with" grep -q '"db"' "$T/lp.out"
 check "... where only the owner writes the answers and approvals relayed to the chain" \
     sh -c "grep -q '\"path\": \"answers\", \"read\": \"view\", \"write\": \"owner\"' '$T/lp.out' && grep -q '\"path\": \"approvals\", \"read\": \"view\", \"write\": \"owner\"' '$T/lp.out'"
-check "the repo ignores *.live.html, so a live page can never be committed" git -C "$REPO" check-ignore -q skills/metaloop/x.live.html
+if [ "$CLONE" = 1 ]; then
+    check "the repo ignores *.live.html, so a live page can never be committed" git -C "$REPO" check-ignore -q skills/metaloop/x.live.html
+else
+    skip "the MetaLoop repository ignores *.live.html (not a clone of it)"
+fi
 (cd "$T/fix" && "$PY" live_page.py --url lp https://claude.ai/artifact/LP1 >/dev/null)
 (cd "$T/fix" && "$PY" live_sync.py lp > "$T/sync1.json" 2>&1)
 check "first sync: the state, both progress lines and the open question" "$PY" - "$T/sync1.json" <<'EOF'

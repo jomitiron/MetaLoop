@@ -8,12 +8,14 @@ tool it names; `gate.py`, `qa-loop.sh` and `services.py` run what it says.
 
 ## Start from the presets
 
+`<kit>` is the kit folder SKILL.md names. Run these from inside the project's repository.
+
 ```bash
-python3 skills/metaloop/kit/init_project.py --list
+python3 <kit>/init_project.py --list
 ```
 
 ```bash
-python3 skills/metaloop/kit/init_project.py --stack node --db postgres --db redis
+python3 <kit>/init_project.py --stack node --db postgres --db redis
 ```
 
 | Stacks | |

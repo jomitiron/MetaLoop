@@ -1,0 +1,24 @@
+# Every commit on main reaches users as a plugin update, so nothing merges until the plugin validates and the kit's
+# self-test passes. (The behaviour evals in evals/ need a signed-in Claude Code and cost money: run them by hand before
+# merging a change to SKILL.md or the references.)
+name: check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  plugin:
+    runs-on: macos-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # the self-test resolves the default branch through origin/
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+      - name: Validate the plugin and the marketplace
+        run: claude plugin validate .
+      - name: Kit self-test
+        run: bash skills/metaloop/kit/selftest.sh

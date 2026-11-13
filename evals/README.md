@@ -17,7 +17,7 @@ must do), run with Claude Code's `claude plugin eval`.
 
 ## Run them
 
-From the repository root (the skill folder):
+From the repository root (the plugin; the skill is `metaloop:metaloop`):
 
 ```bash
 claude plugin eval . --judge-model sonnet

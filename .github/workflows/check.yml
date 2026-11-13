@@ -16,6 +16,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # the self-test resolves the default branch through origin/
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
       - name: Install Claude Code
         run: npm install -g @anthropic-ai/claude-code
       - name: Validate the plugin and the marketplace

@@ -11,6 +11,8 @@ on:
 jobs:
   plugin:
     runs-on: macos-latest
+    permissions:
+      contents: read
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4

@@ -38,6 +38,7 @@ rounds on the plan page.
 | [reference/](reference/) | The orchestrator's procedures, the project profile, the fix and verify loops, the EGM hand-off, and pitfalls met in practice. |
 | [kit/](kit/) | The scripts `init_run.py` copies into a run folder (see [kit/README.md](kit/README.md)). |
 | [kit/presets/](kit/presets/) | Ready-made project profiles: stacks, and the databases and services their checks need. |
+| [evals/](evals/) | Behaviour evals for the skill (`claude plugin eval .`). |
 
 ## Install
 
@@ -85,6 +86,16 @@ field.
 
 MetaLoop also points to companion skills a repository may have (`skills/grilling`, `skills/domain-modeling` for
 `PLANNER=grill`) and follows the repository's own instructions (CLAUDE.md, AGENTS.md) in every session.
+
+## Evals
+
+[evals/](evals/) checks the skill steers Claude as intended: eight cases, from offering a loop only for wide work, to
+planning with EGM before any chain starts, to leaving merges and sign-offs to the owner. Each runs with and without the
+skill, so the report shows the difference it makes.
+
+```bash
+claude plugin eval . --judge-model sonnet
+```
 
 ## Self-test
 
